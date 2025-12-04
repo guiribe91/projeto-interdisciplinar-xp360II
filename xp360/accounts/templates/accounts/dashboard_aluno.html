@@ -1,0 +1,212 @@
+{% extends "accounts/base_dashboard.html" %}
+{% load static %}
+{% block content %}
+
+{% with titulo="Dashboard do Aluno" %}{% endwith %}
+
+<!-- Resumo XP -->
+<div class="row g-4 mb-5">
+
+    <!-- XP Card ATUALIZADO -->
+    <div class="col-md-4">
+        <div class="stats-card xp-card">
+            <div class="stats-icon">⭐</div>
+            <div class="stats-content">
+                <h6 class="stats-label">XP Total</h6>
+                <p class="stats-value">{{ xp_total }} XP</p>
+                <small class="stats-subtitle">
+                    Nível {{ nivel }}
+                </small>
+                
+                <!-- BARRA DE PROGRESSO XP (NOVA) -->
+                <div class="xp-progress-container">
+                    <div class="xp-progress-label">
+                        <span class="xp-current">{{ xp_total }} XP</span>
+                        <span class="xp-next">{{ xp_proximo }} para nível {{ nivel|add:1 }}</span>
+                    </div>
+                    <div class="xp-progress-bar">
+                        {% widthratio xp_total 100 100 as xp_percent %}
+                        <div class="xp-progress-fill" style="width: {{ xp_percent }}%"></div>
+                    </div>
+                    <div class="xp-particles">
+                        <span class="xp-particle"></span>
+                        <span class="xp-particle"></span>
+                        <span class="xp-particle"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progresso do Dia -->
+    <div class="col-md-4">
+        <div class="stats-card missions-card">
+            <div class="stats-icon">🎯</div>
+            <div class="stats-content">
+                <h6 class="stats-label">Progresso Hoje</h6>
+                <p class="stats-value">{{ concluidas_hoje }}/{{ total_hoje }}</p>
+                <small class="stats-subtitle">{{ progresso_dia }}% concluído</small>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Título -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h4 class="section-title mb-0">
+        <span class="title-icon">📋</span>
+        Missões de Hoje
+    </h4>
+
+    <!-- Número de pendentes -->
+    <span class="badge badge-info">
+        {{ pendentes }} pendentes
+    </span>
+</div>
+
+<!-- Lista de Missões -->
+<div class="missions-container">
+
+    {% for m in missoes %}
+        <div class="mission-card {% if m.concluida %}completed{% endif %}">
+
+            <!-- Status visual -->
+            <div class="mission-status">
+                {% if m.concluida %}
+                    <div class="status-check">✓</div>
+                {% else %}
+                    <div class="status-pending"></div>
+                {% endif %}
+            </div>
+
+            <!-- Conteúdo da missão -->
+            <div class="mission-content">
+                <h5 class="mission-title">{{ m.missao.titulo }}</h5>
+
+                <div class="mission-meta">
+                    <span class="meta-item xp-badge">+{{ m.missao.xp }} XP</span>
+                    <span class="meta-item">
+                        Criada em {{ m.missao.data_criacao|date:"d/m" }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Botão -->
+            <div class="mission-action">
+                {% if m.concluida %}
+                    <button class="btn btn-action btn-completed" disabled>
+                        Concluída ✓
+                    </button>
+                {% else %}
+                    <a href="{% url 'concluir_missao' m.id %}" class="btn btn-action btn-primary">
+                        Concluir
+                    </a>
+                {% endif %}
+            </div>
+
+        </div>
+    {% empty %}
+        <div class="text-center text-muted py-5">
+            <p>Nenhuma missão disponível hoje.</p>
+        </div>
+    {% endfor %}
+
+</div>
+
+<!-- CSS INLINE TEMPORÁRIO PARA TESTAR -->
+<style>
+.xp-progress-container {
+    margin-top: 1rem;
+}
+
+.xp-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #6b7280;
+}
+
+.xp-current {
+    color: #fbbf24;
+}
+
+.xp-next {
+    color: #9ca3af;
+}
+
+.xp-progress-bar {
+    width: 100%;
+    height: 12px;
+    background: rgba(251, 191, 36, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.xp-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #fb923c 100%);
+    border-radius: 10px;
+    transition: width 0.8s ease;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+    position: relative;
+}
+
+.xp-progress-fill::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}
+
+.xp-particles {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.xp-particle {
+    width: 4px;
+    height: 4px;
+    background: #fbbf24;
+    border-radius: 50%;
+    animation: particle-float 1.5s infinite ease-in-out;
+}
+
+.xp-particle:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.xp-particle:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes particle-float {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-8px);
+        opacity: 0;
+    }
+}
+</style>
+
+{% endblock %}

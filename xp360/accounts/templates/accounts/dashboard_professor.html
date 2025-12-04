@@ -1,0 +1,320 @@
+{% extends "accounts/base_dashboard.html" %}
+{% load static %}
+{% block content %}
+
+{% with titulo="Painel do Professor" %}{% endwith %}
+
+<!-- Mensagem de Boas-Vindas -->
+<div class="welcome-banner mb-5">
+    <div class="welcome-content">
+        <h2 class="welcome-title">👨‍🏫 Bem-vindo, Professor(a) {{ user.username }}!</h2>
+        <p class="welcome-subtitle">Gerencie suas turmas, crie missões e acompanhe o progresso dos seus alunos</p>
+    </div>
+</div>
+
+<!-- Resumo de Estatísticas -->
+<div class="row g-4 mb-5">
+
+    <!-- Turmas Ativas -->
+    <div class="col-md-3 col-sm-6">
+        <div class="stats-card xp-card">
+            <div class="stats-icon">👥</div>
+            <div class="stats-content">
+                <h6 class="stats-label">Turmas Ativas</h6>
+                <p class="stats-value">{{ turmas.count }}</p>
+                <small class="stats-subtitle">Gerenciando atualmente</small>
+                <div class="col-md-12">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📄</span>
+                            Descrição (opcional)
+                        </label>
+                        <textarea 
+                            name="descricao" 
+                            class="form-control-modern" 
+                            rows="3"
+                            placeholder="Adicione instruções ou observações sobre a missão"
+                        ></textarea>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Total de Alunos -->
+    <div class="col-md-3 col-sm-6">
+        <div class="stats-card missions-card">
+            <div class="stats-icon">🎓</div>
+            <div class="stats-content">
+                <h6 class="stats-label">Total de Alunos</h6>
+                <p class="stats-value">
+                    {% widthratio turmas.count 1 30 %}
+                </p>
+                <small class="stats-subtitle">Em todas as turmas</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Missões Criadas -->
+    <div class="col-md-3 col-sm-6">
+        <div class="stats-card xp-card">
+            <div class="stats-icon">🏆</div>
+            <div class="stats-content">
+                <h6 class="stats-label">Missões Criadas</h6>
+                <p class="stats-value">--</p>
+                <small class="stats-subtitle">Total no sistema</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Turmas Cadastradas -->
+    <div class="col-md-3 col-sm-6">
+        <div class="stats-card missions-card">
+            <div class="stats-icon">📚</div>
+            <div class="stats-content">
+                <h6 class="stats-label">Séries</h6>
+                <p class="stats-value">{{ turmas.count }}</p>
+                <small class="stats-subtitle">Diferentes turmas</small>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================= -->
+<!-- MINHAS TURMAS -->
+<!-- ============================================= -->
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h4 class="section-title mb-0">
+        <span class="title-icon">🏫</span>
+        Minhas Turmas
+    </h4>
+
+    <a href="#" class="btn-add-class">
+        <span class="btn-icon">+</span>
+        <span>Nova Turma</span>
+    </a>
+</div>
+
+<div class="row g-4 mb-5">
+
+    {% for turma in turmas %}
+    <div class="col-md-6 col-lg-4">
+        <div class="class-card">
+            <div class="class-header">
+                <div class="class-icon">📘</div>
+                <div class="class-badge">{{ turma.usuario_set.count }} alunos</div>
+            </div>
+
+            <h5 class="class-title">{{ turma.nome }}</h5>
+            <p class="class-info">{{ turma.serie }} • Ano {{ turma.ano_letivo }}</p>
+
+            <div class="class-stats">
+                <div class="stat-mini">
+                    <span class="stat-label">Engajamento</span>
+                    <div class="progress-mini">
+                        <div class="progress-bar-mini" style="width: 75%"></div>
+                    </div>
+                    <span class="stat-value">75%</span>
+                </div>
+            </div>
+
+            <div class="class-actions">
+                <button class="btn-class-action primary" onclick="window.location.href='#turma-{{ turma.id }}'">
+                    <span class="action-icon">📊</span>
+                    <span>Ver Progresso</span>
+                </button>
+                <button class="btn-class-action" onclick="alert('Função de editar turma ainda não implementada')">
+                    <span class="action-icon">⚙️</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center text-muted py-5">
+            <p style="font-size: 3rem; margin-bottom: 1rem;">📚</p>
+            <p style="font-size: 1.2rem;">Você ainda não criou nenhuma turma</p>
+            <a href="#" class="btn-add-class mt-3">
+                <span class="btn-icon">+</span>
+                <span>Criar Primeira Turma</span>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Card Criar Nova Turma -->
+    {% if turmas %}
+    <div class="col-md-6 col-lg-4">
+        <a href="#" class="class-card add-class-card" style="cursor: pointer; text-decoration: none;">
+            <div class="add-class-content">
+                <div class="add-class-icon">➕</div>
+                <h5 class="add-class-title">Criar Nova Turma</h5>
+                <p class="add-class-text">Adicione uma turma e comece a gerenciar seus alunos</p>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- ============================================= -->
+<!-- FORMULÁRIO DE CRIAR MISSÃO -->
+<!-- ============================================= -->
+
+<div class="create-mission-section">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="section-title mb-0">
+            <span class="title-icon">🎯</span>
+            Criar Nova Missão
+        </h4>
+    </div>
+
+    <div class="mission-form-card">
+
+        <form class="mission-form" method="POST" action="{% url 'criar_missao' %}">
+            {% csrf_token %}
+
+            <div class="row g-4">
+
+                <div class="col-md-8">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📝</span>
+                            Título da Missão
+                        </label>
+                        <input 
+                            type="text" 
+                            name="titulo"
+                            class="form-control-modern"
+                            required
+                            placeholder="Ex: Resolver exercícios de matemática"
+                        >
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">⭐</span>
+                            Pontos XP
+                        </label>
+                        <input 
+                            type="number"
+                            name="xp"
+                            class="form-control-modern"
+                            required
+                            min="10" 
+                            max="200"
+                            placeholder="50"
+                        >
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📚</span>
+                            Disciplina
+                        </label>
+                        <input 
+                            type="text"
+                            name="disciplina"
+                            class="form-control-modern"
+                            placeholder="Ex: Matemática"
+                        >
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">⏱️</span>
+                            Duração (minutos)
+                        </label>
+                        <input 
+                            type="number"
+                            name="duracao"
+                            class="form-control-modern"
+                            placeholder="Ex: 30"
+                        >
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">🏫</span>
+                            Turma
+                        </label>
+
+                        <select name="turma" class="form-control-modern" required>
+                            <option value="">Selecione uma turma</option>
+
+                            {% for turma in turmas %}
+                                <option value="{{ turma.nome }}">{{ turma.nome }} - {{ turma.serie }}</option>
+                            {% empty %}
+                                <!-- Dados de teste - remova quando tiver turmas reais -->
+                                <option value="Matemática">Matemática - 9º Ano A</option>
+                                <option value="Física">Física - 8º Ano B</option>
+                                <option value="Química">Química - 7º Ano C</option>
+                                <option value="Biologia">Biologia - 6º Ano D</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mission-form-actions">
+                <button type="submit" class="btn-form-primary">
+                    <span>Criar Missão</span>
+                    <span class="btn-icon">✓</span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Seção para criar turma (estática - implementar função criar_turma na view depois) -->
+<!-- Remova este comentário e implemente a função criar_turma quando estiver pronto -->
+
+<style>
+.welcome-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    margin-bottom: 2rem;
+}
+
+.welcome-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.welcome-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.95;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .welcome-title {
+        font-size: 1.5rem;
+    }
+    
+    .welcome-subtitle {
+        font-size: 0.95rem;
+    }
+}
+</style>
+
+{% endblock %}

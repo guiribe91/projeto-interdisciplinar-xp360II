@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login • XP360</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body class="login-page">
+
+    <!-- Background decorativo -->
+    <div class="login-background">
+        <div class="bg-shape shape-1"></div>
+        <div class="bg-shape shape-2"></div>
+        <div class="bg-shape shape-3"></div>
+    </div>
+
+    <!-- Container principal -->
+    <div class="login-container">
+        
+        <!-- Card de Login -->
+        <div class="login-card">
+            
+            <!-- Logo e Título -->
+            <div class="login-header">
+                <div class="logo-container">
+                    <div class="logo-icon">⭐</div>
+                    <h1 class="logo-text">XP360</h1>
+                </div>
+                <p class="login-subtitle">Sua jornada de aprendizado começa aqui</p>
+            </div>
+
+            <!-- Alertas -->
+            {% if erro %}
+                <div class="alert alert-danger alert-modern">
+                    <span class="alert-icon">⚠️</span>
+                    <span>{{ erro }}</span>
+                </div>
+            {% endif %}
+
+            <!-- Formulário -->
+            <form method="POST" class="login-form">
+                {% csrf_token %}
+
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <span class="label-icon">👤</span>
+                        Usuário
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-control-modern" 
+                        name="username" 
+                        placeholder="Digite seu usuário"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <span class="label-icon">🔒</span>
+                        Senha
+                    </label>
+                    <input 
+                        type="password" 
+                        class="form-control-modern" 
+                        name="password" 
+                        placeholder="Digite sua senha"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <span>Entrar</span>
+                    <span class="btn-icon">→</span>
+                </button>
+
+            </form>
+
+            <!-- Divisor -->
+            <div class="login-divider">
+                <span>ou</span>
+            </div>
+
+            <!-- Links de Cadastro -->
+            <div class="login-links">
+                <p class="links-title">Primeira vez por aqui?</p>
+                <div class="links-container">
+                    <a href="/accounts/cadastro/aluno/" class="link-card">
+                        <span class="link-icon">🎓</span>
+                        <span class="link-text">
+                            <strong>Sou Aluno</strong>
+                            <small>Criar conta de estudante</small>
+                        </span>
+                    </a>
+                    <a href="/accounts/cadastro/professor/" class="link-card">
+                        <span class="link-icon">👨‍🏫</span>
+                        <span class="link-text">
+                            <strong>Sou Professor</strong>
+                            <small>Criar conta de educador</small>
+                        </span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <p>XP360 • Plataforma de aprendizado gamificado</p>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
