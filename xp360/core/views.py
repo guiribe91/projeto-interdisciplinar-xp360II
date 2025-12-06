@@ -79,6 +79,9 @@ def concluir_missao(request, missao_aluno_id):
         # XP
         xp_ganho = missao_aluno.missao.xp
         usuario = request.user
-        usuario.adicionar_xp(xp_ganho)
+        subiu_nivel = usuario.adicionar_xp(xp_ganho)
+        
+        # 🔥 NOVO: Atualizar streak
+        usuario.atualizar_streak_missao()
 
     return redirect("dashboard_aluno")

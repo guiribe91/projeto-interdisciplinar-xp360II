@@ -111,6 +111,9 @@ def dashboard_professor(request):
 def dashboard_aluno(request):
     from core.models import MissaoAluno
     
+    # 🔥 NOVO: Atualizar streak ao acessar o dashboard
+    request.user.atualizar_streak()
+    
     # Busca missões do aluno
     missoes_aluno = MissaoAluno.objects.filter(aluno=request.user).order_by('-missao__data_criacao')
     
@@ -120,18 +123,32 @@ def dashboard_aluno(request):
     pendentes = total_missoes - concluidas
     progresso = (concluidas / total_missoes * 100) if total_missoes > 0 else 0
     
+    # Missões de hoje
+    concluidas_hoje = missoes_aluno.filter(
+        concluida=True,
+        data_conclusao=timezone.now().date()
+    ).count()
+    
     context = {
         'missoes': missoes_aluno,
         'xp_total': request.user.xp_total,
         'nivel': request.user.nivel,
         'xp_proximo': request.user.xp_para_proximo_nivel(),
+        'progresso_nivel': request.user.progresso_nivel(),
         'total_hoje': total_missoes,
-        'concluidas_hoje': concluidas,
+        'concluidas_hoje': concluidas_hoje,
         'pendentes': pendentes,
         'progresso_dia': int(progresso),
+        
+        # 🔥 NOVO: Dados de streak
+        'streak_atual': request.user.streak_atual,
+        'melhor_streak': request.user.melhor_streak,
+        'titulo_streak': request.user.get_titulo_streak(),
     }
     
     return render(request, 'accounts/dashboard_aluno.html', context)
+
+
 
 @login_required
 def detalhes_turma(request, turma_id):
