@@ -100,8 +100,19 @@ def cadastro_professor(request):
 
 @login_required
 def dashboard_professor(request):
+    from core.models import Disciplina  # 🆕
+    
     turmas = request.user.turmas.all()
-    return render(request, "accounts/dashboard_professor.html", {"turmas": turmas})
+    
+    # 🆕 Buscar todas as disciplinas
+    disciplinas = Disciplina.objects.all().order_by('nome')
+    
+    context = {
+        'turmas': turmas,
+        'disciplinas': disciplinas,  # 🆕
+    }
+    
+    return render(request, "accounts/dashboard_professor.html", context)
 
 # ---------------------------------------------------------
 # DASHBOARD ALUNO

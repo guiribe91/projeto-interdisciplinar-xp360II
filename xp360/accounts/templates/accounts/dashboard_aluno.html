@@ -121,17 +121,33 @@
             </div>
 
             <!-- Botão -->
-            <div class="mission-action">
-                {% if m.concluida %}
-                    <button class="btn btn-action btn-completed" disabled>
-                        Concluída ✓
-                    </button>
-                {% else %}
-                    <a href="{% url 'concluir_missao' m.id %}" class="btn btn-action btn-primary">
-                        Concluir
-                    </a>
-                {% endif %}
-            </div>
+<div class="mission-action">
+    {% if m.concluida %}
+        {% if m.acertou %}
+            <button class="btn btn-action btn-correct" disabled>
+                ✓ Acertou
+            </button>
+        {% elif m.missao.tipo == 'QUESTAO' and m.resposta_escolhida %}
+            <button class="btn btn-action btn-wrong" disabled>
+                ✗ Errou
+            </button>
+        {% else %}
+            <button class="btn btn-action btn-completed" disabled>
+                Concluída ✓
+            </button>
+        {% endif %}
+    {% else %}
+        {% if m.missao.tipo == 'QUESTAO' %}
+            <a href="{% url 'responder_questao' m.id %}" class="btn btn-action btn-question">
+                ❓ Responder
+            </a>
+        {% else %}
+            <a href="{% url 'concluir_missao' m.id %}" class="btn btn-action btn-primary">
+                Concluir
+            </a>
+        {% endif %}
+    {% endif %}
+</div>
 
         </div>
     {% empty %}

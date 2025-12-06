@@ -1,0 +1,332 @@
+{% extends "accounts/base_dashboard.html" %}
+{% load static %}
+{% block content %}
+
+<div class="questao-container">
+    <!-- Header -->
+    <div class="questao-header">
+        <a href="{% url 'dashboard_aluno' %}" class="btn-voltar">
+            ← Voltar
+        </a>
+        <div class="questao-info">
+            <span class="disciplina-badge" style="background: {{ missao.disciplina.cor }}20; color: {{ missao.disciplina.cor }};">
+                {{ missao.disciplina.icone }} {{ missao.disciplina.nome }}
+            </span>
+            <span class="xp-badge">+{{ missao.xp }} XP</span>
+        </div>
+    </div>
+
+    <!-- Card da Questão -->
+    <div class="questao-card">
+        <h2 class="questao-titulo">{{ missao.titulo }}</h2>
+        
+        {% if missao.descricao %}
+        <div class="questao-enunciado">
+            <p>{{ missao.descricao|linebreaks }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Formulário de Resposta -->
+        <form method="POST" id="formQuestao">
+            {% csrf_token %}
+
+            <div class="alternativas-list">
+                {% for alternativa in alternativas %}
+                <label class="alternativa-option" for="alt_{{ alternativa.ordem }}">
+                    <input type="radio" 
+                           name="resposta" 
+                           value="{{ alternativa.ordem }}" 
+                           id="alt_{{ alternativa.ordem }}" 
+                           required>
+                    <div class="alternativa-content">
+                        <span class="alternativa-letra">{{ alternativa.ordem }}</span>
+                        <span class="alternativa-texto">{{ alternativa.texto }}</span>
+                    </div>
+                    <div class="alternativa-check">✓</div>
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="questao-actions">
+                <button type="submit" class="btn-confirmar">
+                    <span>Confirmar Resposta</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Dica -->
+    <div class="questao-dica">
+        💡 <strong>Atenção:</strong> Você só pode responder uma vez. Pense bem antes de confirmar!
+    </div>
+</div>
+
+<style>
+.questao-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.questao-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.btn-voltar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    color: #1f2937;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-voltar:hover {
+    background: #f9fafb;
+    border-color: #6366f1;
+    color: #6366f1;
+    transform: translateX(-4px);
+}
+
+.questao-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.disciplina-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.xp-badge {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.questao-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.questao-titulo {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+.questao-enunciado {
+    background: #f9fafb;
+    border-left: 4px solid #6366f1;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.questao-enunciado p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.alternativas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.alternativa-option {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    background: #f9fafb;
+    border: 3px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.alternativa-option:hover {
+    background: #f0f9ff;
+    border-color: #6366f1;
+    transform: translateX(4px);
+}
+
+.alternativa-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.alternativa-option input[type="radio"]:checked ~ .alternativa-content {
+    font-weight: 700;
+}
+
+.alternativa-option input[type="radio"]:checked ~ .alternativa-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.alternativa-option input[type="radio"]:checked {
+    & ~ * {
+        color: #6366f1;
+    }
+}
+
+.alternativa-option:has(input:checked) {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-color: #6366f1;
+    color: white;
+}
+
+.alternativa-option:has(input:checked) .alternativa-content {
+    color: white;
+}
+
+.alternativa-option:has(input:checked) .alternativa-letra {
+    background: white;
+    color: #6366f1;
+}
+
+.alternativa-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.alternativa-letra {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.alternativa-texto {
+    font-size: 1rem;
+    color: #1f2937;
+    line-height: 1.5;
+}
+
+.alternativa-option:has(input:checked) .alternativa-texto {
+    color: white;
+}
+
+.alternativa-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: white;
+    color: #10b981;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: 700;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+}
+
+.questao-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-confirmar {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 3rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-confirmar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.btn-confirmar:active {
+    transform: translateY(0);
+}
+
+.questao-dica {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    color: #92400e;
+}
+
+@media (max-width: 768px) {
+    .questao-container {
+        padding: 1rem;
+    }
+
+    .questao-card {
+        padding: 1.5rem;
+    }
+
+    .questao-titulo {
+        font-size: 1.25rem;
+    }
+
+    .alternativa-option {
+        padding: 1rem;
+    }
+}
+</style>
+
+<script>
+document.getElementById('formQuestao').addEventListener('submit', function(e) {
+    const resposta = document.querySelector('input[name="resposta"]:checked');
+    if (!resposta) {
+        e.preventDefault();
+        alert('⚠️ Por favor, selecione uma alternativa antes de confirmar!');
+        return;
+    }
+
+    if (!confirm('Tem certeza da sua resposta? Você só pode responder uma vez!')) {
+        e.preventDefault();
+    }
+});
+</script>
+
+{% endblock %}

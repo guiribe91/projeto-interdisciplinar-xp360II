@@ -14,8 +14,6 @@
 
 <!-- Resumo de Estatísticas -->
 <div class="row g-4 mb-5">
-
-    <!-- Turmas Ativas -->
     <div class="col-md-3 col-sm-6">
         <div class="stats-card xp-card">
             <div class="stats-icon">👥</div>
@@ -27,21 +25,17 @@
         </div>
     </div>
 
-    <!-- Total de Alunos -->
     <div class="col-md-3 col-sm-6">
         <div class="stats-card missions-card">
             <div class="stats-icon">🎓</div>
             <div class="stats-content">
                 <h6 class="stats-label">Total de Alunos</h6>
-                <p class="stats-value">
-                    {{ total_alunos }}
-                </p>
+                <p class="stats-value">{{ total_alunos }}</p>
                 <small class="stats-subtitle">Em todas as turmas</small>
             </div>
         </div>
     </div>
 
-    <!-- Missões Criadas -->
     <div class="col-md-3 col-sm-6">
         <div class="stats-card xp-card">
             <div class="stats-icon">🏆</div>
@@ -53,7 +47,6 @@
         </div>
     </div>
 
-    <!-- Turmas Cadastradas -->
     <div class="col-md-3 col-sm-6">
         <div class="stats-card missions-card">
             <div class="stats-icon">📚</div>
@@ -64,19 +57,14 @@
             </div>
         </div>
     </div>
-
 </div>
 
-<!-- ============================================= -->
 <!-- MINHAS TURMAS -->
-<!-- ============================================= -->
-
 <div class="d-flex align-items-center justify-content-between mb-4">
     <h4 class="section-title mb-0">
         <span class="title-icon">🏫</span>
         Minhas Turmas
     </h4>
-
     <a href="#" class="btn-add-class">
         <span class="btn-icon">+</span>
         <span>Nova Turma</span>
@@ -84,20 +72,15 @@
 </div>
 
 <div class="row g-4 mb-5">
-
     {% for turma in turmas %}
     <div class="col-md-6 col-lg-4">
         <div class="class-card">
             <div class="class-header">
                 <div class="class-icon">📘</div>
-                <div class="class-badge">
-                    {{ turma.usuario_set.count }} alunos
-                </div>
+                <div class="class-badge">{{ turma.usuario_set.count }} alunos</div>
             </div>
-
             <h5 class="class-title">{{ turma.nome }}</h5>
             <p class="class-info">{{ turma.serie }} • Ano {{ turma.ano_letivo }}</p>
-
             <div class="class-stats">
                 <div class="stat-mini">
                     <span class="stat-label">Engajamento</span>
@@ -107,7 +90,6 @@
                     <span class="stat-value">75%</span>
                 </div>
             </div>
-
             <div class="class-actions">
                 <a href="{% url 'detalhes_turma' turma.id %}" class="btn-class-action primary">
                     <span class="action-icon">📊</span>
@@ -127,12 +109,8 @@
     {% endfor %}
 </div>
 
-<!-- ============================================= -->
-<!-- FORMULÁRIO DE CRIAR MISSÃO -->
-<!-- ============================================= -->
-
+<!-- 🆕 FORMULÁRIO DE CRIAR MISSÃO ATUALIZADO -->
 <div class="create-mission-section">
-
     <div class="d-flex align-items-center justify-content-between mb-4">
         <h4 class="section-title mb-0">
             <span class="title-icon">🎯</span>
@@ -141,12 +119,11 @@
     </div>
 
     <div class="mission-form-card">
-
-        <form class="mission-form" method="POST" action="{% url 'criar_missao' %}">
+        <form class="mission-form" method="POST" action="{% url 'criar_missao' %}" id="missionForm">
             {% csrf_token %}
 
             <div class="row g-4">
-
+                <!-- Título -->
                 <div class="col-md-8">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
@@ -157,54 +134,143 @@
                     </div>
                 </div>
 
+                <!-- XP -->
                 <div class="col-md-4">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-icon">⭐</span>
                             Pontos XP
                         </label>
-                        <input type="number" name="xp" class="form-control-modern" required min="1">
+                        <input type="number" name="xp" class="form-control-modern" required min="1" value="50">
                     </div>
                 </div>
 
+                <!-- 🆕 Disciplina (Select com ícones) -->
                 <div class="col-md-6">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-icon">📚</span>
                             Disciplina
                         </label>
-                        <input type="text" name="disciplina" class="form-control-modern">
+                        <select name="disciplina" class="form-control-modern disciplina-select" required>
+                            <option value="">Selecione uma disciplina</option>
+                            {% for disciplina in disciplinas %}
+                                <option value="{{ disciplina.id }}" 
+                                        data-icon="{{ disciplina.icone }}" 
+                                        data-cor="{{ disciplina.cor }}">
+                                    {{ disciplina.icone }} {{ disciplina.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
 
+                <!-- 🆕 Tipo de Missão -->
                 <div class="col-md-6">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
-                            <span class="label-icon">⏱️</span>
-                            Duração (minutos)
+                            <span class="label-icon">🎲</span>
+                            Tipo de Missão
                         </label>
-                        <input type="number" name="duracao" class="form-control-modern">
+                        <select name="tipo" id="tipoMissao" class="form-control-modern" required>
+                            <option value="TAREFA">📋 Tarefa Livre</option>
+                            <option value="QUESTAO">❓ Questão com Alternativas</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="col-md-12">
+                <!-- Turma -->
+                <div class="col-md-6">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-icon">🏫</span>
                             Turma
                         </label>
-
-                        <!-- CORRIGIDO: agora envia o ID, não o nome -->
                         <select name="turma" class="form-control-modern" required>
                             <option value="">Selecione uma turma</option>
                             {% for turma in turmas %}
                                 <option value="{{ turma.id }}">{{ turma.nome }} - {{ turma.serie }}</option>
                             {% endfor %}
                         </select>
-
                     </div>
                 </div>
 
+                <!-- Duração -->
+                <div class="col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">⏱️</span>
+                            Duração (minutos)
+                        </label>
+                        <input type="number" name="duracao" class="form-control-modern" value="30">
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                <div class="col-md-12">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📄</span>
+                            Enunciado/Descrição
+                        </label>
+                        <textarea name="descricao" class="form-control-modern" rows="3" 
+                                  placeholder="Descreva a missão ou o enunciado da questão..."></textarea>
+                    </div>
+                </div>
+
+                <!-- 🆕 ALTERNATIVAS (Só aparece se for QUESTAO) -->
+                <div class="col-md-12" id="alternativasSection" style="display: none;">
+                    <div class="alternativas-container">
+                        <h5 class="alternativas-title">
+                            <span class="label-icon">✏️</span>
+                            Alternativas
+                        </h5>
+
+                        <!-- Alternativa A -->
+                        <div class="alternativa-item">
+                            <div class="alternativa-header">
+                                <span class="alternativa-letra">A</span>
+                                <input type="radio" name="resposta_correta" value="A" id="corretaA">
+                                <label for="corretaA" class="checkbox-label">Correta</label>
+                            </div>
+                            <input type="text" name="alternativa_a" class="form-control-modern" 
+                                   placeholder="Digite a alternativa A...">
+                        </div>
+
+                        <!-- Alternativa B -->
+                        <div class="alternativa-item">
+                            <div class="alternativa-header">
+                                <span class="alternativa-letra">B</span>
+                                <input type="radio" name="resposta_correta" value="B" id="corretaB">
+                                <label for="corretaB" class="checkbox-label">Correta</label>
+                            </div>
+                            <input type="text" name="alternativa_b" class="form-control-modern" 
+                                   placeholder="Digite a alternativa B...">
+                        </div>
+
+                        <!-- Alternativa C -->
+                        <div class="alternativa-item">
+                            <div class="alternativa-header">
+                                <span class="alternativa-letra">C</span>
+                                <input type="radio" name="resposta_correta" value="C" id="corretaC">
+                                <label for="corretaC" class="checkbox-label">Correta</label>
+                            </div>
+                            <input type="text" name="alternativa_c" class="form-control-modern" 
+                                   placeholder="Digite a alternativa C...">
+                        </div>
+
+                        <!-- Alternativa D -->
+                        <div class="alternativa-item">
+                            <div class="alternativa-header">
+                                <span class="alternativa-letra">D</span>
+                                <input type="radio" name="resposta_correta" value="D" id="corretaD">
+                                <label for="corretaD" class="checkbox-label">Correta</label>
+                            </div>
+                            <input type="text" name="alternativa_d" class="form-control-modern" 
+                                   placeholder="Digite a alternativa D...">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="mission-form-actions">
@@ -213,7 +279,6 @@
                     <span class="btn-icon">✓</span>
                 </button>
             </div>
-
         </form>
     </div>
 </div>
@@ -225,8 +290,107 @@
     padding: 2rem;
     color: white;
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-    margin-bottom: 2rem;
+}
+
+/* 🆕 Estilo das Alternativas */
+.alternativas-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid #e5e7eb;
+}
+
+.alternativas-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alternativa-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.alternativa-item:hover {
+    border-color: #6366f1;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.alternativa-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.alternativa-letra {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.checkbox-label {
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    user-select: none;
+}
+
+.alternativa-item input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.alternativa-item input[type="radio"]:checked + .checkbox-label {
+    color: #10b981;
+    font-weight: 700;
 }
 </style>
+
+<script>
+// Mostrar/ocultar alternativas baseado no tipo
+document.getElementById('tipoMissao').addEventListener('change', function() {
+    const alternativasSection = document.getElementById('alternativasSection');
+    const isQuestao = this.value === 'QUESTAO';
+    
+    alternativasSection.style.display = isQuestao ? 'block' : 'none';
+    
+    // Tornar campos obrigatórios se for questão
+    const inputs = alternativasSection.querySelectorAll('input[type="text"]');
+    const radioButtons = alternativasSection.querySelectorAll('input[type="radio"]');
+    
+    inputs.forEach(input => {
+        input.required = isQuestao;
+    });
+    
+    // Pelo menos uma resposta correta deve ser selecionada
+    if (isQuestao) {
+        const form = document.getElementById('missionForm');
+        form.addEventListener('submit', function(e) {
+            const respostaCorreta = document.querySelector('input[name="resposta_correta"]:checked');
+            if (!respostaCorreta) {
+                e.preventDefault();
+                alert('❌ Por favor, selecione qual é a resposta correta!');
+            }
+        });
+    }
+});
+</script>
 
 {% endblock %}
