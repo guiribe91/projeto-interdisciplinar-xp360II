@@ -41,20 +41,40 @@ def logout_view(request):
 # ---------------------------------------------------------
 
 def cadastro_aluno(request):
+    from core.models import Turma
+    
     if request.method == "POST":
         username = request.POST.get("username")
         email = request.POST.get("email")
         senha = request.POST.get("password")
+        turma_id = request.POST.get("turma")  # ← NOVO: captura turma selecionada
 
-        Usuario.objects.create_user(
-            username=username,
-            email=email,
-            password=senha,
-            tipo="ALUNO"
-        )
-        return redirect('login')
+        try:
+            turma = Turma.objects.get(id=turma_id) if turma_id else None
+            
+            Usuario.objects.create_user(
+                username=username,
+                email=email,
+                password=senha,
+                tipo="ALUNO",
+                turma=turma  # ← NOVO: associa turma ao aluno
+            )
+            return redirect('login')
+            
+        except Turma.DoesNotExist:
+            return render(request, "accounts/cadastro_aluno.html", {
+                "erro": "Turma selecionada não existe",
+                "turmas": Turma.objects.all()
+            })
+        except Exception as e:
+            return render(request, "accounts/cadastro_aluno.html", {
+                "erro": f"Erro ao criar conta: {e}",
+                "turmas": Turma.objects.all()
+            })
 
-    return render(request, "accounts/cadastro_aluno.html")
+    # GET: exibe formulário com lista de turmas
+    turmas = Turma.objects.all().order_by('serie')
+    return render(request, "accounts/cadastro_aluno.html", {"turmas": turmas})
 
 
 def cadastro_professor(request):
@@ -112,3 +132,51 @@ def dashboard_aluno(request):
     }
     
     return render(request, 'accounts/dashboard_aluno.html', context)
+
+@login_required
+def detalhes_turma(request, turma_id):
+    """View para ver detalhes de uma turma específica"""
+    from core.models import Turma, MissaoAluno
+    
+    turma = Turma.objects.get(id=turma_id, professor=request.user)
+    
+    # ✅ CORREÇÃO: usar usuario_set ao invés de alunos
+    alunos = turma.usuario_set.filter(tipo='ALUNO')
+    
+    missoes = turma.missao_set.all()
+    
+    # Estatísticas
+    total_alunos = alunos.count()
+    total_missoes = missoes.count()
+    
+    # Progresso dos alunos
+    alunos_progresso = []
+    for aluno in alunos:
+        missoes_concluidas = MissaoAluno.objects.filter(
+            aluno=aluno, 
+            missao__turma=turma, 
+            concluida=True
+        ).count()
+        
+        progresso = (missoes_concluidas / total_missoes * 100) if total_missoes > 0 else 0
+        
+        alunos_progresso.append({
+            'aluno': aluno,
+            'missoes_concluidas': missoes_concluidas,
+            'progresso': int(progresso),
+            'xp_total': aluno.xp_total,
+            'nivel': aluno.nivel,
+        })
+    
+    # Ordena por XP (ranking)
+    alunos_progresso.sort(key=lambda x: x['xp_total'], reverse=True)
+    
+    context = {
+        'turma': turma,
+        'alunos_progresso': alunos_progresso,
+        'missoes': missoes,
+        'total_alunos': total_alunos,
+        'total_missoes': total_missoes,
+    }
+    
+    return render(request, 'accounts/detalhes_turma.html', context)

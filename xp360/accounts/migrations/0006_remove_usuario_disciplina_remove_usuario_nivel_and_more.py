@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0005_usuario_nivel_usuario_xp_total'),
-        ('core', '0003_alter_badge_options_alter_missao_options_and_more'),
+        ('core', '0001_initial'),
     ]
 
     operations = [

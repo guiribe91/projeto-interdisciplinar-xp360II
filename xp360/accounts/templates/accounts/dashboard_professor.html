@@ -23,21 +23,6 @@
                 <h6 class="stats-label">Turmas Ativas</h6>
                 <p class="stats-value">{{ turmas.count }}</p>
                 <small class="stats-subtitle">Gerenciando atualmente</small>
-                <div class="col-md-12">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">
-                            <span class="label-icon">📄</span>
-                            Descrição (opcional)
-                        </label>
-                        <textarea 
-                            name="descricao" 
-                            class="form-control-modern" 
-                            rows="3"
-                            placeholder="Adicione instruções ou observações sobre a missão"
-                        ></textarea>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
@@ -49,7 +34,7 @@
             <div class="stats-content">
                 <h6 class="stats-label">Total de Alunos</h6>
                 <p class="stats-value">
-                    {% widthratio turmas.count 1 30 %}
+                    {{ total_alunos }}
                 </p>
                 <small class="stats-subtitle">Em todas as turmas</small>
             </div>
@@ -62,7 +47,7 @@
             <div class="stats-icon">🏆</div>
             <div class="stats-content">
                 <h6 class="stats-label">Missões Criadas</h6>
-                <p class="stats-value">--</p>
+                <p class="stats-value">{{ missoes.count }}</p>
                 <small class="stats-subtitle">Total no sistema</small>
             </div>
         </div>
@@ -105,7 +90,9 @@
         <div class="class-card">
             <div class="class-header">
                 <div class="class-icon">📘</div>
-                <div class="class-badge">{{ turma.usuario_set.count }} alunos</div>
+                <div class="class-badge">
+                    {{ turma.usuario_set.count }} alunos
+                </div>
             </div>
 
             <h5 class="class-title">{{ turma.nome }}</h5>
@@ -122,10 +109,10 @@
             </div>
 
             <div class="class-actions">
-                <button class="btn-class-action primary" onclick="window.location.href='#turma-{{ turma.id }}'">
+                <a href="{% url 'detalhes_turma' turma.id %}" class="btn-class-action primary">
                     <span class="action-icon">📊</span>
-                    <span>Ver Progresso</span>
-                </button>
+                    <span>Ver Detalhes</span>
+                </a>
                 <button class="btn-class-action" onclick="alert('Função de editar turma ainda não implementada')">
                     <span class="action-icon">⚙️</span>
                 </button>
@@ -133,31 +120,11 @@
         </div>
     </div>
     {% empty %}
-    <div class="col-12">
-        <div class="text-center text-muted py-5">
-            <p style="font-size: 3rem; margin-bottom: 1rem;">📚</p>
-            <p style="font-size: 1.2rem;">Você ainda não criou nenhuma turma</p>
-            <a href="#" class="btn-add-class mt-3">
-                <span class="btn-icon">+</span>
-                <span>Criar Primeira Turma</span>
-            </a>
-        </div>
+    <div class="col-12 text-center text-muted py-5">
+        <p style="font-size: 3rem">📚</p>
+        <p style="font-size: 1.2rem;">Você ainda não criou nenhuma turma</p>
     </div>
     {% endfor %}
-
-    <!-- Card Criar Nova Turma -->
-    {% if turmas %}
-    <div class="col-md-6 col-lg-4">
-        <a href="#" class="class-card add-class-card" style="cursor: pointer; text-decoration: none;">
-            <div class="add-class-content">
-                <div class="add-class-icon">➕</div>
-                <h5 class="add-class-title">Criar Nova Turma</h5>
-                <p class="add-class-text">Adicione uma turma e comece a gerenciar seus alunos</p>
-            </div>
-        </a>
-    </div>
-    {% endif %}
-
 </div>
 
 <!-- ============================================= -->
@@ -186,13 +153,7 @@
                             <span class="label-icon">📝</span>
                             Título da Missão
                         </label>
-                        <input 
-                            type="text" 
-                            name="titulo"
-                            class="form-control-modern"
-                            required
-                            placeholder="Ex: Resolver exercícios de matemática"
-                        >
+                        <input type="text" name="titulo" class="form-control-modern" required>
                     </div>
                 </div>
 
@@ -202,15 +163,7 @@
                             <span class="label-icon">⭐</span>
                             Pontos XP
                         </label>
-                        <input 
-                            type="number"
-                            name="xp"
-                            class="form-control-modern"
-                            required
-                            min="10" 
-                            max="200"
-                            placeholder="50"
-                        >
+                        <input type="number" name="xp" class="form-control-modern" required min="1">
                     </div>
                 </div>
 
@@ -220,12 +173,7 @@
                             <span class="label-icon">📚</span>
                             Disciplina
                         </label>
-                        <input 
-                            type="text"
-                            name="disciplina"
-                            class="form-control-modern"
-                            placeholder="Ex: Matemática"
-                        >
+                        <input type="text" name="disciplina" class="form-control-modern">
                     </div>
                 </div>
 
@@ -235,12 +183,7 @@
                             <span class="label-icon">⏱️</span>
                             Duração (minutos)
                         </label>
-                        <input 
-                            type="number"
-                            name="duracao"
-                            class="form-control-modern"
-                            placeholder="Ex: 30"
-                        >
+                        <input type="number" name="duracao" class="form-control-modern">
                     </div>
                 </div>
 
@@ -251,17 +194,11 @@
                             Turma
                         </label>
 
+                        <!-- CORRIGIDO: agora envia o ID, não o nome -->
                         <select name="turma" class="form-control-modern" required>
                             <option value="">Selecione uma turma</option>
-
                             {% for turma in turmas %}
-                                <option value="{{ turma.nome }}">{{ turma.nome }} - {{ turma.serie }}</option>
-                            {% empty %}
-                                <!-- Dados de teste - remova quando tiver turmas reais -->
-                                <option value="Matemática">Matemática - 9º Ano A</option>
-                                <option value="Física">Física - 8º Ano B</option>
-                                <option value="Química">Química - 7º Ano C</option>
-                                <option value="Biologia">Biologia - 6º Ano D</option>
+                                <option value="{{ turma.id }}">{{ turma.nome }} - {{ turma.serie }}</option>
                             {% endfor %}
                         </select>
 
@@ -281,9 +218,6 @@
     </div>
 </div>
 
-<!-- Seção para criar turma (estática - implementar função criar_turma na view depois) -->
-<!-- Remova este comentário e implemente a função criar_turma quando estiver pronto -->
-
 <style>
 .welcome-banner {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -292,28 +226,6 @@
     color: white;
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     margin-bottom: 2rem;
-}
-
-.welcome-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.welcome-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.95;
-    margin: 0;
-}
-
-@media (max-width: 768px) {
-    .welcome-title {
-        font-size: 1.5rem;
-    }
-    
-    .welcome-subtitle {
-        font-size: 0.95rem;
-    }
 }
 </style>
 

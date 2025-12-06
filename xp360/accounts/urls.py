@@ -10,6 +10,8 @@ urlpatterns = [
     # Dashboards
     path("dashboard/aluno/", views.dashboard_aluno, name="dashboard_aluno"),
     path("dashboard/professor/", views.dashboard_professor, name="dashboard_professor"),
+
+    path('turma/<int:turma_id>/', views.detalhes_turma, name='detalhes_turma'),
    
 
 ]

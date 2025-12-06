@@ -36,6 +36,14 @@
                 <p class="register-subtitle">Junte-se à plataforma e comece sua jornada de aprendizado</p>
             </div>
 
+            <!-- Mensagem de Erro -->
+            {% if erro %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Erro:</strong> {{ erro }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
             <!-- Formulário -->
             <form method="POST" class="register-form">
                 {% csrf_token %}
@@ -87,6 +95,21 @@
                         minlength="8"
                     >
                     <small class="form-hint">Mínimo de 8 caracteres</small>
+                </div>
+
+                <!-- ✨ NOVO: Campo de Turma -->
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <span class="label-icon">🏫</span>
+                        Turma
+                    </label>
+                    <select name="turma" class="form-control-modern" required>
+                        <option value="">Selecione sua turma</option>
+                        {% for turma in turmas %}
+                            <option value="{{ turma.id }}">{{ turma.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-hint">Escolha a turma em que você está matriculado</small>
                 </div>
 
                 <!-- Termos -->

@@ -1,0 +1,280 @@
+{% extends "accounts/base_dashboard.html" %}
+{% load static %}
+
+{% block content %}
+
+{% with titulo="Detalhes da Turma" %}{% endwith %}
+
+<!-- Cabeçalho da Turma -->
+<div class="turma-header-card mb-4">
+    <div class="turma-header-content">
+        <div class="turma-icon-large">📘</div>
+        <div class="turma-info">
+            <h2 class="turma-name">{{ turma.nome }}</h2>
+            <p class="turma-details">{{ turma.serie }} • Ano {{ turma.ano_letivo }}</p>
+        </div>
+        <div class="turma-actions">
+            <button class="btn-turma-action" onclick="alert('Editar turma - Em breve')">
+                <span>⚙️</span> Configurações
+            </button>
+            <button class="btn-turma-action primary" onclick="alert('Adicionar alunos - Em breve')">
+                <span>➕</span> Adicionar Alunos
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas Rápidas -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-box">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+                <h3 class="stat-number">{{ total_alunos }}</h3>
+                <p class="stat-label">Alunos Ativos</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-box">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-info">
+                <h3 class="stat-number">{{ total_missoes }}</h3>
+                <p class="stat-label">Missões Criadas</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-box">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+                <h3 class="stat-number">
+                    {% if total_alunos > 0 %}
+                        {% widthratio alunos_progresso|length|default:0 total_alunos 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </h3>
+                <p class="stat-label">Engajamento Médio</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-box">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info">
+                <h3 class="stat-number">
+                    {% if alunos_progresso %}
+                        {{ alunos_progresso.0.xp_total }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </h3>
+                <p class="stat-label">Maior XP da Turma</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ranking e Progresso -->
+<div class="row g-4 mb-4">
+    
+    <!-- Top 5 Ranking -->
+    <div class="col-lg-5">
+        <div class="ranking-card">
+            <div class="card-header-custom">
+                <h4 class="card-title-custom">🏆 Top 5 da Turma</h4>
+            </div>
+            <div class="ranking-list">
+                {% for aluno_info in alunos_progresso|slice:":5" %}
+                <div class="ranking-item {% if forloop.counter == 1 %}first{% elif forloop.counter == 2 %}second{% elif forloop.counter == 3 %}third{% endif %}">
+                    <div class="ranking-position">
+                        {% if forloop.counter == 1 %}🥇
+                        {% elif forloop.counter == 2 %}🥈
+                        {% elif forloop.counter == 3 %}🥉
+                        {% else %}{{ forloop.counter }}º{% endif %}
+                    </div>
+                    <div class="ranking-info">
+                        <h6 class="ranking-name">{{ aluno_info.aluno.username }}</h6>
+                        <p class="ranking-details">Nível {{ aluno_info.nivel }} • {{ aluno_info.missoes_concluidas }} missões</p>
+                    </div>
+                    <div class="ranking-xp">
+                        <span class="xp-badge">{{ aluno_info.xp_total }} XP</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <p>📊 Ainda não há dados de ranking</p>
+                    <small>Os alunos aparecerão aqui quando completarem missões</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Progresso -->
+    <div class="col-lg-7">
+        <div class="progress-card">
+            <div class="card-header-custom">
+                <h4 class="card-title-custom">📈 Progresso da Turma</h4>
+            </div>
+            <div class="progress-chart">
+                {% for aluno_info in alunos_progresso|slice:":10" %}
+                <div class="progress-row">
+                    <div class="progress-student">
+                        <span class="student-avatar">{{ aluno_info.aluno.username|first|upper }}</span>
+                        <span class="student-name">{{ aluno_info.aluno.username }}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: {{ aluno_info.progresso }}%">
+                            <span class="progress-text">{{ aluno_info.progresso }}%</span>
+                        </div>
+                    </div>
+                    <div class="progress-missions">
+                        {{ aluno_info.missoes_concluidas }}/{{ total_missoes }}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <p>👥 Nenhum aluno cadastrado</p>
+                    <small>Adicione alunos para ver o progresso</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Missões -->
+<div class="missions-section">
+    <div class="card-header-custom">
+        <h4 class="card-title-custom">🎯 Missões da Turma</h4>
+        <button class="btn-add-mission" onclick="alert('Criar missão - Em breve')">
+            <span>➕</span> Nova Missão
+        </button>
+    </div>
+    
+    <div class="missions-grid">
+        {% for missao in missoes %}
+        <div class="mission-card-mini">
+            <div class="mission-header-mini">
+                <span class="mission-icon-mini">🎯</span>
+                <span class="mission-xp-mini">+{{ missao.xp_recompensa }} XP</span>
+            </div>
+            <h6 class="mission-title-mini">{{ missao.titulo }}</h6>
+            <p class="mission-meta">
+                <span>📚 {{ missao.disciplina|default:"Geral" }}</span>
+                {% if missao.duracao_estimada %}
+                <span>⏱️ {{ missao.duracao_estimada }}min</span>
+                {% endif %}
+            </p>
+            <div class="mission-progress-mini">
+                <div class="progress-mini-bar">
+                    <div class="progress-mini-fill" style="width: 0%"></div>
+                </div>
+                <span class="progress-mini-text">0/{{ total_alunos }} completaram</span>
+            </div>
+            <button class="btn-mission-action" onclick="alert('Ver detalhes da missão - Em breve')">
+                Ver Detalhes →
+            </button>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state-large">
+                <div class="empty-icon">🎯</div>
+                <h5>Nenhuma missão criada ainda</h5>
+                <p>Crie missões para engajar seus alunos e acompanhar o progresso</p>
+                <button class="btn-primary-large" onclick="alert('Criar primeira missão - Em breve')">
+                    Criar Primeira Missão
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Lista Completa de Alunos -->
+<div class="students-section mt-4">
+    <div class="card-header-custom">
+        <h4 class="card-title-custom">👥 Todos os Alunos ({{ total_alunos }})</h4>
+        <div class="search-box">
+            <input type="text" id="searchStudent" placeholder="🔍 Buscar aluno..." onkeyup="filterStudents()">
+        </div>
+    </div>
+    
+    <div class="students-table">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Aluno</th>
+                    <th>Nível</th>
+                    <th>XP Total</th>
+                    <th>Missões Concluídas</th>
+                    <th>Progresso</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="studentsTableBody">
+                {% for aluno_info in alunos_progresso %}
+                <tr class="student-row">
+                    <td>
+                        <div class="student-cell">
+                            <span class="student-avatar-table">{{ aluno_info.aluno.username|first|upper }}</span>
+                            <span>{{ aluno_info.aluno.username }}</span>
+                        </div>
+                    </td>
+                    <td><span class="level-badge">Nível {{ aluno_info.nivel }}</span></td>
+                    <td><span class="xp-text">{{ aluno_info.xp_total }} XP</span></td>
+                    <td>{{ aluno_info.missoes_concluidas }}/{{ total_missoes }}</td>
+                    <td>
+                        <div class="table-progress">
+                            <div class="table-progress-bar" style="width: {{ aluno_info.progresso }}%"></div>
+                            <span class="table-progress-text">{{ aluno_info.progresso }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn-table-action" onclick="alert('Ver perfil do aluno - Em breve')">
+                            Ver Perfil
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <p class="text-muted">Nenhum aluno cadastrado nesta turma</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<script>
+// Função de busca de alunos
+function filterStudents() {
+    const input = document.getElementById('searchStudent');
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById('studentsTableBody');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const td = rows[i].getElementsByTagName('td')[0];
+        if (td) {
+            const txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+}
+</script>
+
+{% endblock %}
