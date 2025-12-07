@@ -1,0 +1,261 @@
+{% extends "accounts/base_dashboard.html" %}
+{% load static %}
+{% block content %}
+
+<div class="ranking-container">
+    
+    <!-- Sua Posição -->
+    <div class="position-card">
+        <div class="position-icon">🏆</div>
+        <div class="position-info">
+            <h3>Sua Posição</h3>
+            <p class="position-number">#{{ posicao_usuario }}</p>
+            <small>{{ user.xp_total }} XP • Nível {{ user.nivel }}</small>
+        </div>
+    </div>
+
+    <!-- Título -->
+    <h2 class="ranking-title">
+        <span class="title-icon">🏅</span>
+        Top 10 da Turma
+    </h2>
+
+    <!-- Lista de Ranking -->
+    <div class="ranking-list">
+        {% for aluno in alunos %}
+        <div class="ranking-item {% if aluno.id == user.id %}current-user{% endif %}">
+            
+            <!-- Posição -->
+            <div class="rank-position">
+                {% if forloop.counter == 1 %}
+                    <span class="medal gold">🥇</span>
+                {% elif forloop.counter == 2 %}
+                    <span class="medal silver">🥈</span>
+                {% elif forloop.counter == 3 %}
+                    <span class="medal bronze">🥉</span>
+                {% else %}
+                    <span class="rank-number">{{ forloop.counter }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Avatar -->
+            <div class="rank-avatar">
+                {{ aluno.username|first|upper }}
+            </div>
+
+            <!-- Info -->
+            <div class="rank-info">
+                <h5 class="rank-name">
+                    {{ aluno.username }}
+                    {% if aluno.id == user.id %}
+                        <span class="badge-you">Você</span>
+                    {% endif %}
+                </h5>
+                <p class="rank-stats">
+                    <span class="stat-item">⭐ Nível {{ aluno.nivel }}</span>
+                    <span class="stat-item">🔥 {{ aluno.streak_atual }} dias</span>
+                </p>
+            </div>
+
+            <!-- XP -->
+            <div class="rank-xp">
+                <span class="xp-value">{{ aluno.xp_total }}</span>
+                <span class="xp-label">XP</span>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <p style="font-size: 3rem;">🏆</p>
+            <p>Nenhum aluno na sua turma ainda.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+.ranking-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.position-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.position-icon {
+    font-size: 4rem;
+}
+
+.position-info h3 {
+    margin: 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.position-number {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+
+.position-info small {
+    opacity: 0.8;
+}
+
+.ranking-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ranking-item {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.ranking-item:hover {
+    border-color: #6366f1;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15);
+}
+
+.ranking-item.current-user {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-color: #6366f1;
+}
+
+.rank-position {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #6b7280;
+    min-width: 50px;
+    text-align: center;
+}
+
+.medal {
+    font-size: 2.5rem;
+}
+
+.rank-number {
+    color: #9ca3af;
+}
+
+.rank-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.rank-info {
+    flex: 1;
+}
+
+.rank-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge-you {
+    background: #6366f1;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.rank-stats {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.rank-xp {
+    text-align: right;
+}
+
+.xp-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.xp-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+    .position-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .ranking-item {
+        flex-wrap: wrap;
+    }
+
+    .rank-xp {
+        width: 100%;
+        text-align: left;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+    }
+}
+</style>
+
+{% endblock %}

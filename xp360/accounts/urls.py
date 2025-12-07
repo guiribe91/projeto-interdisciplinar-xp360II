@@ -12,6 +12,9 @@ urlpatterns = [
     path("dashboard/professor/", views.dashboard_professor, name="dashboard_professor"),
 
     path('turma/<int:turma_id>/', views.detalhes_turma, name='detalhes_turma'),
+
+    path('ranking/', views.ranking, name='ranking'),
+    path('conquistas/', views.conquistas, name='conquistas'),
    
 
 ]

@@ -10,63 +10,321 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
     <style>
+        :root {
+            --sidebar-width: 280px;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* ========== SIDEBAR MELHORADA ========== */
         .sidebar {
-            width: 250px;
+            width: var(--sidebar-width);
             height: 100vh;
-            background: var(--sidebar);
-            padding: 1.5rem;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            padding: 0;
             position: fixed;
             top: 0;
             left: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
         }
 
-        .sidebar a {
+        /* Logo/Brand */
+        .sidebar-brand {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand h3 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* User Info */
+        .sidebar-user {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.75rem;
+        }
+
+        .user-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            margin: 0 0 0.25rem 0;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .user-stat {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            color: #fbbf24;
+            font-weight: 700;
+            font-size: 1rem;
             display: block;
-            color: var(--sidebar-foreground);
-            padding: 0.8rem 0;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.7rem;
+            display: block;
+            margin-top: 0.25rem;
+        }
+
+        /* Navigation */
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 1rem 1.5rem;
             font-weight: 500;
+            font-size: 0.95rem;
             text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
-        .sidebar a:hover {
-            color: var(--primary);
+        .nav-item:hover {
+            color: white;
+            background: rgba(99, 102, 241, 0.1);
         }
 
+        .nav-item.active {
+            color: white;
+            background: rgba(99, 102, 241, 0.2);
+            border-left: 4px solid #6366f1;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+            width: 28px;
+            text-align: center;
+        }
+
+        .nav-label {
+            flex: 1;
+        }
+
+        /* Logout especial */
+        .nav-item.logout {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ef4444;
+        }
+
+        .nav-item.logout:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        /* Main Content */
         .main-content {
-            margin-left: 260px;
+            margin-left: var(--sidebar-width);
             padding: 2rem;
+            min-height: 100vh;
+            background: #f8fafc;
         }
 
         .navbar-custom {
-            background: var(--card);
-            padding: 1rem 2rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border-radius: var(--radius-lg);
+            background: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 15px;
             margin-bottom: 2rem;
+        }
+
+        .navbar-custom h4 {
+            margin: 0;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        /* Scrollbar customizada */
+        .sidebar-nav::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 
 <body>
 
+    <!-- SIDEBAR MELHORADA -->
     <div class="sidebar">
-        <h4 class="mb-4" style="color: var(--sidebar-foreground);">XP360</h4>
+        
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <h3>
+                <div class="brand-icon">🎮</div>
+                XP360
+            </h3>
+        </div>
 
-        <a href="#">🏠 Home</a>
-        <a href="#">📘 Minhas Missões</a>
-        <a href="#">🏆 Ranking</a>
-        <a href="#">🎖️ Conquistas</a>
-        <a href="{% url 'logout' %}">🚪 Sair</a>
+        <!-- User Info -->
+        <div class="sidebar-user">
+            <div class="user-avatar">
+                {{ user.username|first|upper }}
+            </div>
+            <p class="user-name">{{ user.username }}</p>
+            
+            {% if user.tipo == 'ALUNO' %}
+            <div class="user-stats">
+                <div class="user-stat">
+                    <span class="stat-value">{{ user.nivel }}</span>
+                    <span class="stat-label">NÍVEL</span>
+                </div>
+                <div class="user-stat">
+                    <span class="stat-value">{{ user.xp_total }}</span>
+                    <span class="stat-label">XP</span>
+                </div>
+                <div class="user-stat">
+                    <span class="stat-value">{{ user.streak_atual }}</span>
+                    <span class="stat-label">🔥 DIAS</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Navigation -->
+        <nav class="sidebar-nav">
+            {% if user.tipo == 'ALUNO' %}
+                <a href="{% url 'dashboard_aluno' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard_aluno' %}active{% endif %}">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">Home</span>
+                </a>
+                <a href="{% url 'dashboard_aluno' %}" class="nav-item">
+                    <span class="nav-icon">📘</span>
+                    <span class="nav-label">Minhas Missões</span>
+                </a>
+                <a href="{% url 'ranking' %}" class="nav-item {% if request.resolver_match.url_name == 'ranking' %}active{% endif %}">
+                    <span class="nav-icon">🏆</span>
+                    <span class="nav-label">Ranking</span>
+                </a>
+                <a href="{% url 'conquistas' %}" class="nav-item {% if request.resolver_match.url_name == 'conquistas' %}active{% endif %}">
+                    <span class="nav-icon">🎖️</span>
+                    <span class="nav-label">Conquistas</span>
+                </a>
+            {% else %}
+                <a href="{% url 'dashboard_professor' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard_professor' %}active{% endif %}">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">Home</span>
+                </a>
+                <a href="{% url 'dashboard_professor' %}" class="nav-item">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-label">Minhas Turmas</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Relatórios</span>
+                </a>
+            {% endif %}
+        </nav>
+
+        <!-- Logout -->
+        <a href="{% url 'logout' %}" class="nav-item logout">
+            <span class="nav-icon">🚪</span>
+            <span class="nav-label">Sair</span>
+        </a>
+
     </div>
 
+    <!-- MAIN CONTENT -->
     <div class="main-content">
-
         <div class="navbar-custom">
-            <h4 class="m-0">{{ titulo }}</h4>
+            <h4>{{ titulo }}</h4>
         </div>
 
         {% block content %}{% endblock %}
-
     </div>
 
 </body>

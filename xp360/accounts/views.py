@@ -208,3 +208,47 @@ def detalhes_turma(request, turma_id):
     }
     
     return render(request, 'accounts/detalhes_turma.html', context)
+
+# =============================
+# RANKING
+# =============================
+@login_required
+def ranking(request):
+    from core.models import MissaoAluno
+    
+    # Buscar alunos da mesma turma
+    if request.user.turma:
+        alunos = Usuario.objects.filter(
+            tipo='ALUNO',
+            turma=request.user.turma
+        ).order_by('-xp_total')[:10]
+        
+        # Calcular posição do usuário atual
+        posicao_usuario = Usuario.objects.filter(
+            tipo='ALUNO',
+            turma=request.user.turma,
+            xp_total__gt=request.user.xp_total
+        ).count() + 1
+    else:
+        alunos = []
+        posicao_usuario = 0
+    
+    context = {
+        'alunos': alunos,
+        'posicao_usuario': posicao_usuario,
+    }
+    
+    return render(request, 'accounts/ranking.html', context)
+
+
+# =============================
+# CONQUISTAS (BADGES)
+# =============================
+@login_required
+def conquistas(request):
+    # Por enquanto, página simples
+    # Vamos implementar badges depois
+    context = {
+        'titulo': 'Minhas Conquistas'
+    }
+    return render(request, 'accounts/conquistas.html', context)

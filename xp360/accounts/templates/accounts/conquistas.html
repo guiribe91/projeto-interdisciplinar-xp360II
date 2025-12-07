@@ -1,0 +1,265 @@
+{% extends "accounts/base_dashboard.html" %}
+{% load static %}
+{% block content %}
+
+<div class="conquistas-container">
+    
+    <!-- Header -->
+    <div class="conquistas-header">
+        <h2>🎖️ Suas Conquistas</h2>
+        <p class="subtitle">Desbloqueie badges completando desafios!</p>
+    </div>
+
+    <!-- Badges Temporárias (até implementar o sistema real) -->
+    <div class="badges-grid">
+        
+        <!-- Badge 1: Primeiro Passo -->
+        <div class="badge-card {% if user.xp_total > 0 %}unlocked{% else %}locked{% endif %}">
+            <div class="badge-icon">🌱</div>
+            <h5 class="badge-name">Primeiro Passo</h5>
+            <p class="badge-description">Complete sua primeira missão</p>
+            {% if user.xp_total > 0 %}
+                <span class="badge-status unlocked-text">✓ Conquistado!</span>
+            {% else %}
+                <span class="badge-status locked-text">🔒 Bloqueado</span>
+            {% endif %}
+        </div>
+
+        <!-- Badge 2: Streak 7 dias -->
+        <div class="badge-card {% if user.streak_atual >= 7 %}unlocked{% else %}locked{% endif %}">
+            <div class="badge-icon">🔥</div>
+            <h5 class="badge-name">Chama Ardente</h5>
+            <p class="badge-description">Mantenha 7 dias de streak</p>
+            {% if user.streak_atual >= 7 %}
+                <span class="badge-status unlocked-text">✓ Conquistado!</span>
+            {% else %}
+                <span class="badge-status locked-text">{{ user.streak_atual }}/7 dias</span>
+            {% endif %}
+        </div>
+
+        <!-- Badge 3: Nível 5 -->
+        <div class="badge-card {% if user.nivel >= 5 %}unlocked{% else %}locked{% endif %}">
+            <div class="badge-icon">⭐</div>
+            <h5 class="badge-name">Estrela Nascente</h5>
+            <p class="badge-description">Alcance o nível 5</p>
+            {% if user.nivel >= 5 %}
+                <span class="badge-status unlocked-text">✓ Conquistado!</span>
+            {% else %}
+                <span class="badge-status locked-text">Nível {{ user.nivel }}/5</span>
+            {% endif %}
+        </div>
+
+        <!-- Badge 4: Nível 10 -->
+        <div class="badge-card {% if user.nivel >= 10 %}unlocked{% else %}locked{% endif %}">
+            <div class="badge-icon">💫</div>
+            <h5 class="badge-name">Mestre do Conhecimento</h5>
+            <p class="badge-description">Alcance o nível 10</p>
+            {% if user.nivel >= 10 %}
+                <span class="badge-status unlocked-text">✓ Conquistado!</span>
+            {% else %}
+                <span class="badge-status locked-text">Nível {{ user.nivel }}/10</span>
+            {% endif %}
+        </div>
+
+        <!-- Badge 5: Streak 30 dias -->
+        <div class="badge-card {% if user.streak_atual >= 30 %}unlocked{% else %}locked{% endif %}">
+            <div class="badge-icon">🏆</div>
+            <h5 class="badge-name">Campeão da Consistência</h5>
+            <p class="badge-description">Mantenha 30 dias de streak</p>
+            {% if user.streak_atual >= 30 %}
+                <span class="badge-status unlocked-text">✓ Conquistado!</span>
+            {% else %}
+                <span class="badge-status locked-text">{{ user.streak_atual }}/30 dias</span>
+            {% endif %}
+        </div>
+
+        <!-- Badge 6: Recorde de Streak -->
+        <div class="badge-card {% if user.melhor_streak >= 50 %}unlocked{% else %}locked{% endif %}">
+            <div class="badge-icon">🔥</div>
+            <h5 class="badge-name">Lendário</h5>
+            <p class="badge-description">Recorde de 50 dias de streak</p>
+            {% if user.melhor_streak >= 50 %}
+                <span class="badge-status unlocked-text">✓ Conquistado!</span>
+            {% else %}
+                <span class="badge-status locked-text">Recorde: {{ user.melhor_streak }} dias</span>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="conquistas-stats">
+        <h4>📊 Seu Progresso</h4>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-info">
+                    <p class="stat-value">{{ badges_conquistadas }}</p>
+                    <p class="stat-label">Badges Conquistadas</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-info">
+                    <p class="stat-value">{{ user.nivel }}</p>
+                    <p class="stat-label">Nível Atual</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-info">
+                    <p class="stat-value">{{ user.melhor_streak }}</p>
+                    <p class="stat-label">Melhor Streak</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.conquistas-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.conquistas-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.conquistas-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.badge-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.badge-card.unlocked {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.badge-card.locked {
+    opacity: 0.6;
+}
+
+.badge-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.badge-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.badge-card.locked .badge-icon {
+    filter: grayscale(100%);
+    opacity: 0.5;
+}
+
+.badge-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.badge-description {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.badge-status {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.unlocked-text {
+    background: #10b981;
+    color: white;
+}
+
+.locked-text {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.conquistas-stats {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    border: 2px solid #e5e7eb;
+}
+
+.conquistas-stats h4 {
+    margin-bottom: 1.5rem;
+    color: #1f2937;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 10px;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .badges-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+{% endblock %}
