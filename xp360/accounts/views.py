@@ -246,9 +246,30 @@ def ranking(request):
 # =============================
 @login_required
 def conquistas(request):
-    # Por enquanto, página simples
-    # Vamos implementar badges depois
+    from .models import BadgeUsuario, Badge
+    from .badges import get_progresso_badges
+    
+    # Badges conquistadas
+    badges_conquistadas = BadgeUsuario.objects.filter(
+        usuario=request.user
+    ).select_related('badge')
+    
+    # Todas as badges
+    todas_badges = Badge.objects.all()
+    
+    # IDs das conquistadas
+    conquistadas_ids = set(badges_conquistadas.values_list('badge_id', flat=True))
+    
+    # Progresso das pendentes
+    progresso_badges = get_progresso_badges(request.user)
+    
     context = {
-        'titulo': 'Minhas Conquistas'
+        'titulo': 'Minhas Conquistas',
+        'badges_conquistadas': badges_conquistadas,
+        'total_badges': todas_badges.count(),
+        'total_conquistadas': badges_conquistadas.count(),
+        'progresso_badges': progresso_badges,
+        'conquistadas_ids': conquistadas_ids,
     }
+    
     return render(request, 'accounts/conquistas.html', context)

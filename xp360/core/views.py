@@ -147,11 +147,22 @@ def responder_questao(request, missao_aluno_id):
         missao_aluno.save()
 
         # Dar XP apenas se acertar
+        # Dar XP apenas se acertar
         if acertou:
             xp_ganho = missao_aluno.missao.xp
             usuario = request.user
             usuario.adicionar_xp(xp_ganho)
             usuario.atualizar_streak_missao()
+            
+            # 🆕 VERIFICAR BADGES
+            from accounts.badges import verificar_e_conceder_badges
+            badges_novas = verificar_e_conceder_badges(usuario)
+            
+            if badges_novas:
+                request.session['badges_novas'] = [
+                    {'nome': badge.nome, 'icone': badge.icone} 
+                    for badge in badges_novas
+                ]
 
         return redirect("dashboard_aluno")
 
@@ -172,9 +183,9 @@ def responder_questao(request, missao_aluno_id):
 # =============================
 @login_required
 def concluir_missao(request, missao_aluno_id):
-
     from .models import MissaoAluno
     from accounts.models import Usuario
+    from accounts.badges import verificar_e_conceder_badges  # 🆕
 
     missao_aluno = get_object_or_404(
         MissaoAluno,
@@ -183,7 +194,6 @@ def concluir_missao(request, missao_aluno_id):
     )
 
     if not missao_aluno.concluida:
-
         missao_aluno.concluida = True
         missao_aluno.data_conclusao = timezone.now().date()
         missao_aluno.save()
@@ -193,7 +203,17 @@ def concluir_missao(request, missao_aluno_id):
         usuario = request.user
         subiu_nivel = usuario.adicionar_xp(xp_ganho)
         
-        # 🔥 NOVO: Atualizar streak
+        # Atualizar streak
         usuario.atualizar_streak_missao()
+        
+        # 🆕 VERIFICAR E CONCEDER BADGES
+        badges_novas = verificar_e_conceder_badges(usuario)
+        
+        # 🆕 Armazenar badges na sessão para notificação
+        if badges_novas:
+            request.session['badges_novas'] = [
+                {'nome': badge.nome, 'icone': badge.icone} 
+                for badge in badges_novas
+            ]
 
     return redirect("dashboard_aluno")

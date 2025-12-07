@@ -134,3 +134,47 @@ class Usuario(AbstractUser):
             return "📚 Estudioso"
         else:
             return "🌱 Iniciante"
+        
+
+# ==========================================
+# 🆕 SISTEMA DE BADGES
+# ==========================================
+
+class Badge(models.Model):
+    TIPO_CHOICES = [
+        ('MISSOES', 'Missões'),
+        ('STREAK', 'Sequência'),
+        ('NIVEL', 'Nível'),
+        ('PRECISAO', 'Precisão'),
+    ]
+    
+    nome = models.CharField(max_length=100)
+    descricao = models.CharField(max_length=200)
+    icone = models.CharField(max_length=10)  # emoji
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    condicao_valor = models.IntegerField()  # Ex: 7 para "7 dias de streak"
+    ordem = models.IntegerField(default=0)  # Para ordenar exibição
+    
+    class Meta:
+        verbose_name = "Badge"
+        verbose_name_plural = "Badges"
+        ordering = ['ordem', 'condicao_valor']
+    
+    def __str__(self):
+        return f"{self.icone} {self.nome}"
+
+
+class BadgeUsuario(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='badges_conquistadas')
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    data_conquista = models.DateTimeField(auto_now_add=True)
+    visualizada = models.BooleanField(default=False)  # Para notificações
+    
+    class Meta:
+        unique_together = ('usuario', 'badge')
+        verbose_name = "Badge Conquistada"
+        verbose_name_plural = "Badges Conquistadas"
+        ordering = ['-data_conquista']
+    
+    def __str__(self):
+        return f"{self.usuario.username} - {self.badge.nome}"
