@@ -19,19 +19,28 @@ class Disciplina(models.Model):
         return f"{self.icone} {self.nome}"
 
 
+# ==========================================
+# Turma - CORRIGIDO com referência string
+# ==========================================
 class Turma(models.Model):
     nome = models.CharField(max_length=100)
     serie = models.CharField(max_length=50)
     ano_letivo = models.IntegerField()
-    codigo = models.CharField(max_length=10, unique=True)
-    professor = models.ForeignKey("accounts.Usuario", on_delete=models.CASCADE, related_name='turmas')
-
-    def __str__(self):
-        return f"{self.nome} - {self.serie}"
+    professor = models.ForeignKey(
+        'accounts.Usuario',
+        on_delete=models.CASCADE,
+        related_name='turmas_professor',  # ← MUDANÇA: de 'turmas' para 'turmas_professor'
+        limit_choices_to={'tipo': 'PROFESSOR'}
+    )
+    data_criacao = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     
     class Meta:
-        verbose_name = "Turma"
-        verbose_name_plural = "Turmas"
+        verbose_name = 'Turma'
+        verbose_name_plural = 'Turmas'
+        ordering = ['-ano_letivo', 'nome']
+    
+    def __str__(self):
+        return f"{self.nome} - {self.serie} ({self.ano_letivo})"
 
 
 # ==========================================
@@ -104,6 +113,9 @@ class Alternativa(models.Model):
         return f"{self.ordem}) {self.texto[:50]} {check}"
 
 
+# ==========================================
+# MissaoAluno
+# ==========================================
 class MissaoAluno(models.Model):
     aluno = models.ForeignKey("accounts.Usuario", on_delete=models.CASCADE)
     missao = models.ForeignKey(Missao, on_delete=models.CASCADE)
@@ -128,6 +140,9 @@ class MissaoAluno(models.Model):
         return f"{self.aluno.username} - {self.missao.titulo}"
 
 
+# ==========================================
+# Badge
+# ==========================================
 class Badge(models.Model):
     nome = models.CharField(max_length=50)
     descricao = models.CharField(max_length=200)
@@ -142,6 +157,9 @@ class Badge(models.Model):
         verbose_name_plural = "Badges"
 
 
+# ==========================================
+# BadgeUsuario
+# ==========================================
 class BadgeUsuario(models.Model):
     usuario = models.ForeignKey("accounts.Usuario", on_delete=models.CASCADE)
     badge = models.ForeignKey(Badge, on_delete=models.CASCADE)

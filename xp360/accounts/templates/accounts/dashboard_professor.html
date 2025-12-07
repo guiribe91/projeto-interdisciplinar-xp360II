@@ -2,10 +2,8 @@
 {% load static %}
 {% block content %}
 
-{% with titulo="Painel do Professor" %}{% endwith %}
-
 <!-- Mensagem de Boas-Vindas -->
-<div class="welcome-banner mb-5">
+<div class="welcome-banner">
     <div class="welcome-content">
         <h2 class="welcome-title">👨‍🏫 Bem-vindo, Professor(a) {{ user.username }}!</h2>
         <p class="welcome-subtitle">Gerencie suas turmas, crie missões e acompanhe o progresso dos seus alunos</p>
@@ -51,9 +49,9 @@
         <div class="stats-card missions-card">
             <div class="stats-icon">📚</div>
             <div class="stats-content">
-                <h6 class="stats-label">Séries</h6>
-                <p class="stats-value">{{ turmas.count }}</p>
-                <small class="stats-subtitle">Diferentes turmas</small>
+                <h6 class="stats-label">Disciplinas</h6>
+                <p class="stats-value">{{ disciplinas.count }}</p>
+                <small class="stats-subtitle">Disponíveis</small>
             </div>
         </div>
     </div>
@@ -65,10 +63,10 @@
         <span class="title-icon">🏫</span>
         Minhas Turmas
     </h4>
-    <a href="#" class="btn-add-class">
+    <button type="button" class="btn-add-class" data-bs-toggle="modal" data-bs-target="#modalCriarTurma">
         <span class="btn-icon">+</span>
         <span>Nova Turma</span>
-    </a>
+    </button>
 </div>
 
 <div class="row g-4 mb-5">
@@ -85,9 +83,9 @@
                 <div class="stat-mini">
                     <span class="stat-label">Engajamento</span>
                     <div class="progress-mini">
-                        <div class="progress-bar-mini" style="width: 75%"></div>
+                        <div class="progress-bar-mini" style="width: {% if turma.usuario_set.count > 0 %}75{% else %}0{% endif %}%"></div>
                     </div>
-                    <span class="stat-value">75%</span>
+                    <span class="stat-value">{% if turma.usuario_set.count > 0 %}75{% else %}0{% endif %}%</span>
                 </div>
             </div>
             <div class="class-actions">
@@ -95,21 +93,28 @@
                     <span class="action-icon">📊</span>
                     <span>Ver Detalhes</span>
                 </a>
-                <button class="btn-class-action" onclick="alert('Função de editar turma ainda não implementada')">
+                <button class="btn-class-action" onclick="editarTurma({{ turma.id }}, '{{ turma.nome }}', '{{ turma.serie }}', {{ turma.ano_letivo }})">
                     <span class="action-icon">⚙️</span>
                 </button>
             </div>
         </div>
     </div>
     {% empty %}
-    <div class="col-12 text-center text-muted py-5">
-        <p style="font-size: 3rem">📚</p>
-        <p style="font-size: 1.2rem;">Você ainda não criou nenhuma turma</p>
+    <div class="col-12">
+        <div class="text-center py-5" style="background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <p style="font-size: 4rem; margin-bottom: 1rem;">📚</p>
+            <h5 style="color: #374151; font-weight: 700; margin-bottom: 0.5rem;">Nenhuma turma criada ainda</h5>
+            <p style="color: #6b7280; margin-bottom: 1.5rem;">Comece criando sua primeira turma para gerenciar seus alunos</p>
+            <button type="button" class="btn-add-class" data-bs-toggle="modal" data-bs-target="#modalCriarTurma">
+                <span class="btn-icon">+</span>
+                <span>Criar Primeira Turma</span>
+            </button>
+        </div>
     </div>
     {% endfor %}
 </div>
 
-<!-- 🆕 FORMULÁRIO DE CRIAR MISSÃO ATUALIZADO -->
+<!-- CRIAR NOVA MISSÃO -->
 <div class="create-mission-section">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <h4 class="section-title mb-0">
@@ -130,7 +135,7 @@
                             <span class="label-icon">📝</span>
                             Título da Missão
                         </label>
-                        <input type="text" name="titulo" class="form-control-modern" required>
+                        <input type="text" name="titulo" class="form-control-modern" required placeholder="Ex: Resolva 10 equações de segundo grau">
                     </div>
                 </div>
 
@@ -145,19 +150,17 @@
                     </div>
                 </div>
 
-                <!-- 🆕 Disciplina (Select com ícones) -->
+                <!-- Disciplina -->
                 <div class="col-md-6">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <span class="label-icon">📚</span>
                             Disciplina
                         </label>
-                        <select name="disciplina" class="form-control-modern disciplina-select" required>
+                        <select name="disciplina" class="form-control-modern" required>
                             <option value="">Selecione uma disciplina</option>
                             {% for disciplina in disciplinas %}
-                                <option value="{{ disciplina.id }}" 
-                                        data-icon="{{ disciplina.icone }}" 
-                                        data-cor="{{ disciplina.cor }}">
+                                <option value="{{ disciplina.id }}">
                                     {{ disciplina.icone }} {{ disciplina.nome }}
                                 </option>
                             {% endfor %}
@@ -165,7 +168,7 @@
                     </div>
                 </div>
 
-                <!-- 🆕 Tipo de Missão -->
+                <!-- Tipo de Missão -->
                 <div class="col-md-6">
                     <div class="form-group-modern">
                         <label class="form-label-modern">
@@ -202,7 +205,7 @@
                             <span class="label-icon">⏱️</span>
                             Duração (minutos)
                         </label>
-                        <input type="number" name="duracao" class="form-control-modern" value="30">
+                        <input type="number" name="duracao" class="form-control-modern" value="30" min="1">
                     </div>
                 </div>
 
@@ -218,7 +221,7 @@
                     </div>
                 </div>
 
-                <!-- 🆕 ALTERNATIVAS (Só aparece se for QUESTAO) -->
+                <!-- ALTERNATIVAS (Só aparece se for QUESTAO) -->
                 <div class="col-md-12" id="alternativasSection" style="display: none;">
                     <div class="alternativas-container">
                         <h5 class="alternativas-title">
@@ -283,85 +286,123 @@
     </div>
 </div>
 
-<style>
-.welcome-banner {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 2rem;
-    color: white;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-}
+<!-- MODAL CRIAR TURMA -->
+<div class="modal fade" id="modalCriarTurma" tabindex="-1" aria-labelledby="modalCriarTurmaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px 20px 0 0; padding: 1.5rem 2rem;">
+                <h5 class="modal-title" id="modalCriarTurmaLabel" style="font-weight: 700; font-size: 1.25rem;">
+                    <span style="font-size: 1.5rem; margin-right: 0.5rem;">🏫</span>
+                    Criar Nova Turma
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'criar_turma' %}" id="formCriarTurma">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 2rem;">
+                    <div class="form-group-modern mb-4">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📝</span>
+                            Nome da Turma
+                        </label>
+                        <input type="text" name="nome" class="form-control-modern" required placeholder="Ex: Turma A, 9º Ano Manhã">
+                    </div>
+                    
+                    <div class="form-group-modern mb-4">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📚</span>
+                            Série/Ano
+                        </label>
+                        <select name="serie" class="form-control-modern" required>
+                            <option value="">Selecione a série</option>
+                            <option value="6º Ano">6º Ano</option>
+                            <option value="7º Ano">7º Ano</option>
+                            <option value="8º Ano">8º Ano</option>
+                            <option value="9º Ano">9º Ano</option>
+                            <option value="1º Ano EM">1º Ano EM</option>
+                            <option value="2º Ano EM">2º Ano EM</option>
+                            <option value="3º Ano EM">3º Ano EM</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📅</span>
+                            Ano Letivo
+                        </label>
+                        <input type="number" name="ano_letivo" class="form-control-modern" required value="2025" min="2020" max="2030">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 2px solid #f3f4f6; padding: 1.25rem 2rem;">
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; color: #6b7280; background: #f3f4f6;">Cancelar</button>
+                    <button type="submit" class="btn-form-primary" style="padding: 0.75rem 2rem;">
+                        <span>Criar Turma</span>
+                        <span class="btn-icon">✓</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-/* 🆕 Estilo das Alternativas */
-.alternativas-container {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 2px solid #e5e7eb;
-}
-
-.alternativas-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.alternativa-item {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border: 2px solid #e5e7eb;
-    transition: all 0.3s ease;
-}
-
-.alternativa-item:hover {
-    border-color: #6366f1;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
-}
-
-.alternativa-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-}
-
-.alternativa-letra {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    color: white;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 1rem;
-}
-
-.checkbox-label {
-    font-weight: 600;
-    color: #6b7280;
-    cursor: pointer;
-    user-select: none;
-}
-
-.alternativa-item input[type="radio"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-
-.alternativa-item input[type="radio"]:checked + .checkbox-label {
-    color: #10b981;
-    font-weight: 700;
-}
-</style>
+<!-- MODAL EDITAR TURMA -->
+<div class="modal fade" id="modalEditarTurma" tabindex="-1" aria-labelledby="modalEditarTurmaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: white; border-radius: 20px 20px 0 0; padding: 1.5rem 2rem;">
+                <h5 class="modal-title" id="modalEditarTurmaLabel" style="font-weight: 700; font-size: 1.25rem;">
+                    <span style="font-size: 1.5rem; margin-right: 0.5rem;">⚙️</span>
+                    Editar Turma
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="" id="formEditarTurma">
+                {% csrf_token %}
+                <input type="hidden" name="turma_id" id="editTurmaId">
+                <div class="modal-body" style="padding: 2rem;">
+                    <div class="form-group-modern mb-4">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📝</span>
+                            Nome da Turma
+                        </label>
+                        <input type="text" name="nome" id="editNome" class="form-control-modern" required>
+                    </div>
+                    
+                    <div class="form-group-modern mb-4">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📚</span>
+                            Série/Ano
+                        </label>
+                        <select name="serie" id="editSerie" class="form-control-modern" required>
+                            <option value="6º Ano">6º Ano</option>
+                            <option value="7º Ano">7º Ano</option>
+                            <option value="8º Ano">8º Ano</option>
+                            <option value="9º Ano">9º Ano</option>
+                            <option value="1º Ano EM">1º Ano EM</option>
+                            <option value="2º Ano EM">2º Ano EM</option>
+                            <option value="3º Ano EM">3º Ano EM</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <span class="label-icon">📅</span>
+                            Ano Letivo
+                        </label>
+                        <input type="number" name="ano_letivo" id="editAno" class="form-control-modern" required min="2020" max="2030">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 2px solid #f3f4f6; padding: 1.25rem 2rem;">
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; color: #6b7280; background: #f3f4f6;">Cancelar</button>
+                    <button type="submit" class="btn-form-primary" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);">
+                        <span>Salvar Alterações</span>
+                        <span class="btn-icon">✓</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script>
 // Mostrar/ocultar alternativas baseado no tipo
@@ -373,24 +414,40 @@ document.getElementById('tipoMissao').addEventListener('change', function() {
     
     // Tornar campos obrigatórios se for questão
     const inputs = alternativasSection.querySelectorAll('input[type="text"]');
-    const radioButtons = alternativasSection.querySelectorAll('input[type="radio"]');
     
     inputs.forEach(input => {
         input.required = isQuestao;
     });
+});
+
+// Validar formulário de missão
+document.getElementById('missionForm').addEventListener('submit', function(e) {
+    const tipoMissao = document.getElementById('tipoMissao').value;
     
-    // Pelo menos uma resposta correta deve ser selecionada
-    if (isQuestao) {
-        const form = document.getElementById('missionForm');
-        form.addEventListener('submit', function(e) {
-            const respostaCorreta = document.querySelector('input[name="resposta_correta"]:checked');
-            if (!respostaCorreta) {
-                e.preventDefault();
-                alert('❌ Por favor, selecione qual é a resposta correta!');
-            }
-        });
+    if (tipoMissao === 'QUESTAO') {
+        const respostaCorreta = document.querySelector('input[name="resposta_correta"]:checked');
+        if (!respostaCorreta) {
+            e.preventDefault();
+            alert('❌ Por favor, selecione qual é a resposta correta!');
+            return false;
+        }
     }
 });
+
+// Função para editar turma
+function editarTurma(id, nome, serie, ano) {
+    document.getElementById('editTurmaId').value = id;
+    document.getElementById('editNome').value = nome;
+    document.getElementById('editSerie').value = serie;
+    document.getElementById('editAno').value = ano;
+    
+    // Atualizar action do formulário
+    document.getElementById('formEditarTurma').action = '/accounts/editar-turma/' + id + '/';
+    
+    // Abrir modal
+    const modal = new bootstrap.Modal(document.getElementById('modalEditarTurma'));
+    modal.show();
+}
 </script>
 
 {% endblock %}

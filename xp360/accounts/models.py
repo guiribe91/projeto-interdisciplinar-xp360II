@@ -9,14 +9,34 @@ class Usuario(AbstractUser):
         ('ALUNO', 'Aluno'),
         ('PROFESSOR', 'Professor'),
     ]
-
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='ALUNO')
-    turma = models.ForeignKey(
+    
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    xp_total = models.IntegerField(default=0)
+    nivel = models.IntegerField(default=1)
+    
+    # 🔄 MUDANÇA: De ForeignKey para ManyToManyField
+    turmas_aluno = models.ManyToManyField(
         'core.Turma',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
+        related_name='alunos',
+        blank=True,
+        verbose_name='Turmas do Aluno'
     )
+    
+    # Streak
+    streak_atual = models.IntegerField(default=0)
+    melhor_streak = models.IntegerField(default=0)
+    ultimo_acesso = models.DateField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Usuário"
+        verbose_name_plural = "Usuários"
+
+    def __str__(self):
+        return self.username
+    
+
+
+
     
     # Sistema de XP e Níveis
     xp_total = models.IntegerField(default=0)

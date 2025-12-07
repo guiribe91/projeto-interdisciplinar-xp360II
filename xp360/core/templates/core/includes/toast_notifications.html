@@ -1,0 +1,281 @@
+<!-- 
+  📁 Salvar em: templates/core/includes/toast_notifications.html
+  
+  Sistema de notificações toast para gamificação
+-->
+
+<style>
+/* Container de Toasts */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 350px;
+}
+
+/* Toast Base */
+.toast {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    animation: slideIn 0.4s ease-out;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.toast:hover {
+    transform: translateX(-5px);
+}
+
+.toast.toast-badge {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.toast.toast-level {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.toast.toast-streak {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.toast.toast-xp {
+    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+/* Ícone do Toast */
+.toast-icon {
+    font-size: 36px;
+    flex-shrink: 0;
+    animation: bounce 0.6s ease-in-out;
+}
+
+/* Conteúdo do Toast */
+.toast-content {
+    flex-grow: 1;
+}
+
+.toast-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.toast-message {
+    font-size: 14px;
+    opacity: 0.95;
+}
+
+/* Botão de fechar */
+.toast-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.toast-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animações */
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.toast.removing {
+    animation: slideOut 0.3s ease-in forwards;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    #toast-container {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .toast {
+        padding: 15px;
+    }
+    
+    .toast-icon {
+        font-size: 28px;
+    }
+}
+</style>
+
+<!-- Container onde os toasts aparecerão -->
+<div id="toast-container"></div>
+
+<script>
+// 🎯 SISTEMA DE NOTIFICAÇÕES
+const ToastSystem = {
+    container: null,
+    
+    init() {
+        this.container = document.getElementById('toast-container');
+    },
+    
+    // Criar toast genérico
+    show(options) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${options.type || ''}`;
+        
+        toast.innerHTML = `
+            <div class="toast-icon">${options.icon}</div>
+            <div class="toast-content">
+                <div class="toast-title">${options.title}</div>
+                <div class="toast-message">${options.message}</div>
+            </div>
+            <button class="toast-close" onclick="ToastSystem.close(this)">×</button>
+        `;
+        
+        this.container.appendChild(toast);
+        
+        // Auto-remover após 5 segundos
+        setTimeout(() => {
+            this.close(toast.querySelector('.toast-close'));
+        }, options.duration || 5000);
+        
+        // Fechar ao clicar no toast
+        toast.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('toast-close')) {
+                this.close(toast.querySelector('.toast-close'));
+            }
+        });
+    },
+    
+    // Fechar toast
+    close(button) {
+        const toast = button.closest('.toast');
+        toast.classList.add('removing');
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    },
+    
+    // 🏆 Badge conquistada
+    badge(nome, icone) {
+        this.show({
+            type: 'toast-badge',
+            icon: icone,
+            title: '🎉 Nova Conquista!',
+            message: `Você desbloqueou: ${nome}`,
+            duration: 6000
+        });
+    },
+    
+    // ⭐ Subiu de nível
+    levelUp(nivel) {
+        this.show({
+            type: 'toast-level',
+            icon: '⭐',
+            title: 'Level Up!',
+            message: `Parabéns! Você alcançou o nível ${nivel}`,
+            duration: 5000
+        });
+    },
+    
+    // 🔥 Streak quebrado/atingido
+    streak(dias, tipo = 'novo_recorde') {
+        const messages = {
+            'novo_recorde': `Novo recorde! ${dias} dias de sequência! 🔥`,
+            'manteve': `Sequência mantida! ${dias} dias consecutivos! 💪`,
+            'perdeu': `Sequência perdida... Comece novamente! 😢`
+        };
+        
+        this.show({
+            type: 'toast-streak',
+            icon: tipo === 'perdeu' ? '💔' : '🔥',
+            title: tipo === 'perdeu' ? 'Streak Perdido' : 'Streak Mantido!',
+            message: messages[tipo],
+            duration: 5000
+        });
+    },
+    
+    // 💎 XP ganho
+    xp(quantidade) {
+        this.show({
+            type: 'toast-xp',
+            icon: '💎',
+            title: '+' + quantidade + ' XP',
+            message: 'Experiência ganha!',
+            duration: 3000
+        });
+    }
+};
+
+// Inicializar quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    ToastSystem.init();
+    
+    // 🆕 Verificar se tem badges na sessão
+    const badgesNovas = {{ badges_novas|safe|default:"[]" }};
+    if (badgesNovas && badgesNovas.length > 0) {
+        // Mostrar cada badge com delay
+        badgesNovas.forEach((badge, index) => {
+            setTimeout(() => {
+                ToastSystem.badge(badge.nome, badge.icone);
+            }, index * 500); // 500ms entre cada badge
+        });
+    }
+    
+    // 🆕 Verificar se subiu de nível
+    const nivelNovo = {{ nivel_novo|default:"null" }};
+    if (nivelNovo) {
+        setTimeout(() => {
+            ToastSystem.levelUp(nivelNovo);
+        }, badgesNovas.length * 500 + 200);
+    }
+    
+    // 🆕 Verificar streak
+    const streakInfo = {{ streak_info|safe|default:"null" }};
+    if (streakInfo) {
+        setTimeout(() => {
+            ToastSystem.streak(streakInfo.dias, streakInfo.tipo);
+        }, (badgesNovas.length * 500) + (nivelNovo ? 700 : 200));
+    }
+});
+
+// Exportar para uso global
+window.ToastSystem = ToastSystem;
+</script>

@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+import json
 
 
 # =============================
-# CRIAR MISSÃO - ATUALIZADO
+# CRIAR MISSÃO
 # =============================
 @login_required
 def criar_missao(request):
@@ -19,7 +20,7 @@ def criar_missao(request):
         disciplina_id = request.POST.get("disciplina")
         duracao = request.POST.get("duracao")
         turma_id = request.POST.get("turma")
-        tipo = request.POST.get("tipo", "TAREFA")  # 🆕
+        tipo = request.POST.get("tipo", "TAREFA")
 
         try:
             # Buscar turma e disciplina
@@ -34,11 +35,11 @@ def criar_missao(request):
                 turma=turma,
                 disciplina=disciplina,
                 duracao=duracao if duracao else None,
-                tipo=tipo,  # 🆕
+                tipo=tipo,
                 data_disponivel=timezone.now().date()
             )
 
-            # 🆕 Se for QUESTÃO, criar as alternativas
+            # Se for QUESTÃO, criar as alternativas
             if tipo == "QUESTAO":
                 alternativa_a = request.POST.get("alternativa_a")
                 alternativa_b = request.POST.get("alternativa_b")
@@ -87,12 +88,13 @@ def criar_missao(request):
 
 
 # =============================
-# CONCLUIR MISSÃO - ATUALIZADO
+# CONCLUIR MISSÃO - VERSÃO UNIFICADA COM NOTIFICAÇÕES
 # =============================
 @login_required
 def concluir_missao(request, missao_aluno_id):
     from .models import MissaoAluno
     from accounts.models import Usuario
+    from accounts.badges import verificar_e_conceder_badges
 
     missao_aluno = get_object_or_404(
         MissaoAluno,
@@ -101,25 +103,63 @@ def concluir_missao(request, missao_aluno_id):
     )
 
     if not missao_aluno.concluida:
+        usuario = request.user
+        
+        # 🎯 Guardar estado ANTES das mudanças
+        nivel_anterior = usuario.nivel
+        streak_anterior = usuario.streak_atual
+        
+        # Marcar como concluída
         missao_aluno.concluida = True
         missao_aluno.data_conclusao = timezone.now().date()
         missao_aluno.save()
 
-        # XP
+        # Adicionar XP e verificar se subiu de nível
         xp_ganho = missao_aluno.missao.xp
-        usuario = request.user
         subiu_nivel = usuario.adicionar_xp(xp_ganho)
         
         # Atualizar streak
         usuario.atualizar_streak_missao()
+        
+        # 🏆 VERIFICAR E CONCEDER BADGES
+        badges_novas = verificar_e_conceder_badges(usuario)
+        
+        # 🎉 PREPARAR NOTIFICAÇÕES
+        if badges_novas:
+            request.session['badges_novas'] = [
+                {'nome': badge.nome, 'icone': badge.icone} 
+                for badge in badges_novas
+            ]
+        
+        # ⭐ Notificar se subiu de nível
+        if subiu_nivel:
+            request.session['nivel_novo'] = usuario.nivel
+        
+        # 🔥 Notificar sobre streak
+        if usuario.streak_atual > streak_anterior:
+            # Streak aumentou
+            tipo_streak = 'novo_recorde' if usuario.streak_atual > usuario.melhor_streak else 'manteve'
+            request.session['streak_info'] = json.dumps({
+                'dias': usuario.streak_atual,
+                'tipo': tipo_streak
+            })
+        elif usuario.streak_atual == 0 and streak_anterior > 0:
+            # Streak quebrou
+            request.session['streak_info'] = json.dumps({
+                'dias': streak_anterior,
+                'tipo': 'perdeu'
+            })
 
     return redirect("dashboard_aluno")
 
 
-# 🆕 NOVA VIEW: Responder Questão
+# =============================
+# RESPONDER QUESTÃO - COM NOTIFICAÇÕES
+# =============================
 @login_required
 def responder_questao(request, missao_aluno_id):
     from .models import MissaoAluno, Alternativa
+    from accounts.badges import verificar_e_conceder_badges
 
     missao_aluno = get_object_or_404(
         MissaoAluno,
@@ -128,6 +168,12 @@ def responder_questao(request, missao_aluno_id):
     )
 
     if request.method == "POST":
+        usuario = request.user
+        
+        # 🎯 Guardar estado ANTES das mudanças
+        nivel_anterior = usuario.nivel
+        streak_anterior = usuario.streak_atual
+        
         resposta = request.POST.get("resposta")  # A, B, C ou D
         
         # Buscar a alternativa correta
@@ -146,23 +192,33 @@ def responder_questao(request, missao_aluno_id):
         missao_aluno.data_conclusao = timezone.now().date()
         missao_aluno.save()
 
-        # Dar XP apenas se acertar
-        # Dar XP apenas se acertar
+        # Dar XP e verificar badges APENAS se acertar
         if acertou:
             xp_ganho = missao_aluno.missao.xp
-            usuario = request.user
-            usuario.adicionar_xp(xp_ganho)
+            subiu_nivel = usuario.adicionar_xp(xp_ganho)
             usuario.atualizar_streak_missao()
             
-            # 🆕 VERIFICAR BADGES
-            from accounts.badges import verificar_e_conceder_badges
+            # 🏆 VERIFICAR BADGES
             badges_novas = verificar_e_conceder_badges(usuario)
             
+            # 🎉 PREPARAR NOTIFICAÇÕES
             if badges_novas:
                 request.session['badges_novas'] = [
                     {'nome': badge.nome, 'icone': badge.icone} 
                     for badge in badges_novas
                 ]
+            
+            # ⭐ Notificar se subiu de nível
+            if subiu_nivel:
+                request.session['nivel_novo'] = usuario.nivel
+            
+            # 🔥 Notificar sobre streak
+            if usuario.streak_atual > streak_anterior:
+                tipo_streak = 'novo_recorde' if usuario.streak_atual > usuario.melhor_streak else 'manteve'
+                request.session['streak_info'] = json.dumps({
+                    'dias': usuario.streak_atual,
+                    'tipo': tipo_streak
+                })
 
         return redirect("dashboard_aluno")
 
@@ -176,44 +232,3 @@ def responder_questao(request, missao_aluno_id):
     }
     
     return render(request, 'core/responder_questao.html', context)
-
-
-# =============================
-# CONCLUIR MISSÃO
-# =============================
-@login_required
-def concluir_missao(request, missao_aluno_id):
-    from .models import MissaoAluno
-    from accounts.models import Usuario
-    from accounts.badges import verificar_e_conceder_badges  # 🆕
-
-    missao_aluno = get_object_or_404(
-        MissaoAluno,
-        id=missao_aluno_id,
-        aluno=request.user
-    )
-
-    if not missao_aluno.concluida:
-        missao_aluno.concluida = True
-        missao_aluno.data_conclusao = timezone.now().date()
-        missao_aluno.save()
-
-        # XP
-        xp_ganho = missao_aluno.missao.xp
-        usuario = request.user
-        subiu_nivel = usuario.adicionar_xp(xp_ganho)
-        
-        # Atualizar streak
-        usuario.atualizar_streak_missao()
-        
-        # 🆕 VERIFICAR E CONCEDER BADGES
-        badges_novas = verificar_e_conceder_badges(usuario)
-        
-        # 🆕 Armazenar badges na sessão para notificação
-        if badges_novas:
-            request.session['badges_novas'] = [
-                {'nome': badge.nome, 'icone': badge.icone} 
-                for badge in badges_novas
-            ]
-
-    return redirect("dashboard_aluno")
