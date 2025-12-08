@@ -72,6 +72,12 @@
                     <span class="nav-icon">🎖️</span>
                     <span class="nav-label">Conquistas</span>
                 </a>
+                <a href="{% url 'historico_aluno' %}" 
+                   class="nav-item {% if request.resolver_match.url_name == 'historico_aluno' %}active{% endif %}">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">Histórico</span>
+                </a>
+
             {% else %}
                 <a href="{% url 'dashboard_professor' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard_professor' %}active{% endif %}">
                     <span class="nav-icon">🏠</span>
@@ -85,6 +91,13 @@
                     <span class="nav-icon">📊</span>
                     <span class="nav-label">Relatórios</span>
                 </a>
+
+                <a href="{% url 'historico_professor' %}" 
+   class="nav-item {% if request.resolver_match.url_name == 'historico_professor' %}active{% endif %}">
+    <span class="nav-icon">📅</span>
+    <span class="nav-label">Histórico</span>
+</a>
+
             {% endif %}
         </nav>
 

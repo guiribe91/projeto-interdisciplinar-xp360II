@@ -1,0 +1,478 @@
+{% extends "accounts/base_dashboard.html" %}
+{% load static %}
+{% block content %}
+
+<!-- Header -->
+<div class="historico-header mb-5">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h2 class="historico-title">
+                <span class="title-icon">📚</span>
+                Histórico de Missões Criadas
+            </h2>
+            <p class="historico-subtitle">Todas as suas missões e estatísticas de conclusão</p>
+        </div>
+        <a href="{% url 'dashboard_professor' %}" class="btn-back">
+            <span>← Voltar ao Dashboard</span>
+        </a>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="stats-card-mini">
+            <div class="stats-icon-mini">🎯</div>
+            <div class="stats-content-mini">
+                <h6>Missões Criadas</h6>
+                <p class="stats-number">{{ total_missoes }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stats-card-mini success">
+            <div class="stats-icon-mini">✅</div>
+            <div class="stats-content-mini">
+                <h6>Conclusões</h6>
+                <p class="stats-number">{{ total_conclusoes }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stats-card-mini warning">
+            <div class="stats-icon-mini">📊</div>
+            <div class="stats-content-mini">
+                <h6>Atribuições Totais</h6>
+                <p class="stats-number">{{ total_atribuicoes }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stats-card-mini info">
+            <div class="stats-icon-mini">📈</div>
+            <div class="stats-content-mini">
+                <h6>Taxa de Conclusão</h6>
+                <p class="stats-number">{{ taxa_conclusao }}%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="historico-filters mb-4">
+    <div class="row g-3">
+        <!-- Busca -->
+        <div class="col-md-4">
+            <div class="search-box">
+                <input type="text" id="searchInput" class="form-control-search" placeholder="🔍 Buscar missões...">
+            </div>
+        </div>
+        
+        <!-- Filtro Turma -->
+        <div class="col-md-3">
+            <select id="filterTurma" class="form-select-modern">
+                <option value="">🏫 Todas as Turmas</option>
+                {% for turma in turmas %}
+                    <option value="{{ turma.id }}">{{ turma.nome }} - {{ turma.serie }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Filtro Disciplina -->
+        <div class="col-md-2">
+            <select id="filterDisciplina" class="form-select-modern">
+                <option value="">📚 Todas</option>
+                {% for disc in disciplinas %}
+                    <option value="{{ disc.id }}">{{ disc.icone }} {{ disc.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Filtro Tipo -->
+        <div class="col-md-3">
+            <select id="filterTipo" class="form-select-modern">
+                <option value="">🎲 Todos os Tipos</option>
+                <option value="QUESTAO">❓ Questões</option>
+                <option value="TAREFA">📋 Tarefas</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Missões -->
+<div id="missoesContainer" class="historico-container">
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 text-muted">Carregando missões...</p>
+    </div>
+</div>
+
+<!-- Botão Carregar Mais -->
+<div class="text-center mt-4">
+    <button id="loadMoreBtn" class="btn-load-more" style="display: none;">
+        <span>Carregar Mais</span>
+        <span class="btn-icon">↓</span>
+    </button>
+</div>
+
+<!-- MESMOS ESTILOS DO ALUNO -->
+<style>
+.historico-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    border-radius: 20px;
+    color: white;
+}
+
+.historico-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.historico-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+}
+
+.btn-back {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-4px);
+}
+
+.stats-card-mini {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.stats-card-mini:hover {
+    transform: translateY(-4px);
+}
+
+.stats-card-mini.success { border-left: 4px solid #10b981; }
+.stats-card-mini.warning { border-left: 4px solid #f59e0b; }
+.stats-card-mini.info { border-left: 4px solid #3b82f6; }
+
+.stats-icon-mini {
+    font-size: 2.5rem;
+}
+
+.stats-content-mini h6 {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+    font-weight: 600;
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0.25rem 0 0 0;
+    color: #1f2937;
+}
+
+.form-control-search, .form-select-modern {
+    padding: 0.875rem 1.25rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control-search:focus, .form-select-modern:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.historico-container {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.mission-card-professor {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    border-left: 4px solid #667eea;
+}
+
+.mission-card-professor:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.mission-header-prof {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.mission-title-prof {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.mission-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.meta-tag {
+    padding: 0.375rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.meta-tag.disciplina { background: #ede9fe; color: #7c3aed; }
+.meta-tag.xp { background: #fef3c7; color: #d97706; }
+.meta-tag.tipo { background: #dbeafe; color: #1d4ed8; }
+.meta-tag.data { background: #f3f4f6; color: #6b7280; }
+
+.mission-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid #f3f4f6;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.progress-bar-custom {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    border-radius: 10px;
+    transition: width 0.8s ease;
+}
+
+.btn-details {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.btn-details:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-load-more {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 2.5rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-load-more:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 20px;
+}
+
+.empty-state-icon { font-size: 5rem; margin-bottom: 1rem; }
+.empty-state-title { font-size: 1.5rem; font-weight: 700; color: #1f2937; }
+.empty-state-text { color: #6b7280; }
+</style>
+
+<script>
+let currentPage = 1;
+let hasMore = true;
+let isLoading = false;
+
+const container = document.getElementById('missoesContainer');
+const loadMoreBtn = document.getElementById('loadMoreBtn');
+const searchInput = document.getElementById('searchInput');
+const filterTurma = document.getElementById('filterTurma');
+const filterDisciplina = document.getElementById('filterDisciplina');
+const filterTipo = document.getElementById('filterTipo');
+const loading = document.getElementById('loading');
+
+async function loadMissoes(append = false) {
+    if (isLoading) return;
+    isLoading = true;
+    
+    if (!append) {
+        currentPage = 1;
+        loading.style.display = 'block';
+        container.innerHTML = '';
+    }
+    
+    const params = new URLSearchParams({
+        page: currentPage,
+        turma: filterTurma.value,
+        disciplina: filterDisciplina.value,
+        tipo: filterTipo.value,
+        busca: searchInput.value.trim(),
+    });
+    
+    try {
+        const response = await fetch(`/core/api/historico/professor/?${params}`);
+        const data = await response.json();
+        
+        loading.style.display = 'none';
+        
+        if (data.missoes.length === 0 && currentPage === 1) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <h3 class="empty-state-title">Nenhuma missão encontrada</h3>
+                    <p class="empty-state-text">Tente ajustar os filtros ou crie novas missões</p>
+                </div>
+            `;
+            loadMoreBtn.style.display = 'none';
+            return;
+        }
+        
+        data.missoes.forEach(missao => {
+            const card = createMissionCard(missao);
+            container.insertAdjacentHTML('beforeend', card);
+        });
+        
+        hasMore = data.has_more;
+        loadMoreBtn.style.display = hasMore ? 'block' : 'none';
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        loading.style.display = 'none';
+    }
+    
+    isLoading = false;
+}
+
+function createMissionCard(m) {
+    return `
+        <div class="mission-card-professor">
+            <div class="mission-header-prof">
+                <div style="flex: 1;">
+                    <h5 class="mission-title-prof">${m.titulo}</h5>
+                    <p style="color: #6b7280; margin: 0.5rem 0 0 0; font-size: 0.875rem;">${m.descricao}</p>
+                    
+                    <div class="mission-meta-tags">
+                        <span class="meta-tag disciplina" style="background-color: ${m.disciplina.cor}20; color: ${m.disciplina.cor};">
+                            ${m.disciplina.icone} ${m.disciplina.nome}
+                        </span>
+                        <span class="meta-tag xp">⭐ ${m.xp} XP</span>
+                        <span class="meta-tag tipo">${m.tipo_display}</span>
+                        <span class="meta-tag data">📅 ${m.data_criacao}</span>
+                        <span class="meta-tag data">🏫 ${m.turma}</span>
+                    </div>
+                </div>
+                <a href="/core/missao/${m.id}/detalhes/" class="btn-details">
+                    Ver Detalhes →
+                </a>
+            </div>
+            
+            <div class="mission-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total Alunos</span>
+                    <span class="stat-value">${m.total_alunos}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Concluídas</span>
+                    <span class="stat-value" style="color: #10b981;">${m.concluidas}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Taxa</span>
+                    <span class="stat-value" style="color: #667eea;">${m.taxa_conclusao}%</span>
+                </div>
+            </div>
+            
+            <div class="progress-bar-custom">
+                <div class="progress-fill" style="width: ${m.taxa_conclusao}%"></div>
+            </div>
+        </div>
+    `;
+}
+
+loadMoreBtn.addEventListener('click', () => {
+    currentPage++;
+    loadMissoes(true);
+});
+
+let searchTimeout;
+searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadMissoes(), 500);
+});
+
+filterTurma.addEventListener('change', () => loadMissoes());
+filterDisciplina.addEventListener('change', () => loadMissoes());
+filterTipo.addEventListener('change', () => loadMissoes());
+
+loadMissoes();
+</script>
+
+{% endblock %}

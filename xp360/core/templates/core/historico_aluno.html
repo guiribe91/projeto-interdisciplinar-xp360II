@@ -1,0 +1,542 @@
+{% extends "accounts/base_dashboard.html" %}
+{% load static %}
+{% block content %}
+
+<!-- Header -->
+<div class="historico-header mb-5">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h2 class="historico-title">
+                <span class="title-icon">📚</span>
+                Histórico de Missões
+            </h2>
+            <p class="historico-subtitle">Todas as suas missões em um só lugar</p>
+        </div>
+        <a href="{% url 'dashboard_aluno' %}" class="btn-back">
+            <span>← Voltar ao Dashboard</span>
+        </a>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="stats-card-mini">
+            <div class="stats-icon-mini">📊</div>
+            <div class="stats-content-mini">
+                <h6>Total de Missões</h6>
+                <p class="stats-number">{{ total_missoes }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stats-card-mini success">
+            <div class="stats-icon-mini">✅</div>
+            <div class="stats-content-mini">
+                <h6>Concluídas</h6>
+                <p class="stats-number">{{ concluidas }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stats-card-mini warning">
+            <div class="stats-icon-mini">⏳</div>
+            <div class="stats-content-mini">
+                <h6>Pendentes</h6>
+                <p class="stats-number">{{ pendentes }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stats-card-mini info">
+            <div class="stats-icon-mini">🎯</div>
+            <div class="stats-content-mini">
+                <h6>Taxa de Acerto</h6>
+                <p class="stats-number">{{ taxa_acerto }}%</p>
+                <small>{{ acertos }}/{{ total_questoes }} questões</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros e Busca -->
+<div class="historico-filters mb-4">
+    <div class="row g-3">
+        <!-- Busca -->
+        <div class="col-md-4">
+            <div class="search-box">
+                <input type="text" id="searchInput" class="form-control-search" placeholder="🔍 Buscar missões...">
+            </div>
+        </div>
+        
+        <!-- Filtro Status -->
+        <div class="col-md-2">
+            <select id="filterStatus" class="form-select-modern">
+                <option value="todas">📋 Todas</option>
+                <option value="concluidas">✅ Concluídas</option>
+                <option value="pendentes">⏳ Pendentes</option>
+            </select>
+        </div>
+        
+        <!-- Filtro Disciplina -->
+        <div class="col-md-3">
+            <select id="filterDisciplina" class="form-select-modern">
+                <option value="">📚 Todas as Disciplinas</option>
+                {% for disc in disciplinas %}
+                    <option value="{{ disc.id }}">{{ disc.icone }} {{ disc.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Filtro Tipo -->
+        <div class="col-md-3">
+            <select id="filterTipo" class="form-select-modern">
+                <option value="">🎲 Todos os Tipos</option>
+                <option value="QUESTAO">❓ Questões</option>
+                <option value="TAREFA">📋 Tarefas</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Missões -->
+<div id="missoesContainer" class="historico-container">
+    <!-- Loading -->
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-3 text-muted">Carregando missões...</p>
+    </div>
+</div>
+
+<!-- Botão Carregar Mais -->
+<div class="text-center mt-4">
+    <button id="loadMoreBtn" class="btn-load-more" style="display: none;">
+        <span>Carregar Mais</span>
+        <span class="btn-icon">↓</span>
+    </button>
+</div>
+
+<!-- CSS -->
+<style>
+.historico-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    border-radius: 20px;
+    color: white;
+}
+
+.historico-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.historico-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+}
+
+.btn-back {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-4px);
+}
+
+.stats-card-mini {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.stats-card-mini:hover {
+    transform: translateY(-4px);
+}
+
+.stats-card-mini.success { border-left: 4px solid #10b981; }
+.stats-card-mini.warning { border-left: 4px solid #f59e0b; }
+.stats-card-mini.info { border-left: 4px solid #3b82f6; }
+
+.stats-icon-mini {
+    font-size: 2.5rem;
+}
+
+.stats-content-mini h6 {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+    font-weight: 600;
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0.25rem 0 0 0;
+    color: #1f2937;
+}
+
+.stats-content-mini small {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.search-box {
+    position: relative;
+}
+
+.form-control-search {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control-search:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.form-select-modern {
+    padding: 0.875rem 1.25rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.form-select-modern:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.historico-container {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.mission-card-history {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.5rem;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.mission-card-history:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.mission-card-history.completed {
+    border-left: 4px solid #10b981;
+}
+
+.mission-card-history.pending {
+    border-left: 4px solid #f59e0b;
+}
+
+.mission-status-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mission-status-icon.completed { background: #d1fae5; }
+.mission-status-icon.pending { background: #fef3c7; }
+.mission-status-icon.correct { background: #dbeafe; }
+.mission-status-icon.wrong { background: #fee2e2; }
+
+.mission-info {
+    flex: 1;
+}
+
+.mission-title-history {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.5rem 0;
+}
+
+.mission-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.meta-tag {
+    padding: 0.375rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.meta-tag.disciplina {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.meta-tag.xp {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.meta-tag.tipo {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.meta-tag.data {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.mission-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.badge-result {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.badge-result.correct {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.badge-result.wrong {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-load-more {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 2.5rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.btn-load-more:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.empty-state-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+    color: #6b7280;
+    font-size: 1rem;
+}
+</style>
+
+<!-- JavaScript -->
+<script>
+let currentPage = 1;
+let hasMore = true;
+let isLoading = false;
+
+// Elementos
+const container = document.getElementById('missoesContainer');
+const loadMoreBtn = document.getElementById('loadMoreBtn');
+const searchInput = document.getElementById('searchInput');
+const filterStatus = document.getElementById('filterStatus');
+const filterDisciplina = document.getElementById('filterDisciplina');
+const filterTipo = document.getElementById('filterTipo');
+const loading = document.getElementById('loading');
+
+// Carregar missões
+async function loadMissoes(append = false) {
+    if (isLoading) return;
+    isLoading = true;
+    
+    if (!append) {
+        currentPage = 1;
+        loading.style.display = 'block';
+        container.innerHTML = '';
+    }
+    
+    // Parâmetros
+    const params = new URLSearchParams({
+        page: currentPage,
+        status: filterStatus.value,
+        disciplina: filterDisciplina.value,
+        tipo: filterTipo.value,
+        busca: searchInput.value.trim(),
+    });
+    
+    try {
+        const response = await fetch(`/core/api/historico/aluno/?${params}`);
+        const data = await response.json();
+        
+        loading.style.display = 'none';
+        
+        if (data.missoes.length === 0 && currentPage === 1) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <h3 class="empty-state-title">Nenhuma missão encontrada</h3>
+                    <p class="empty-state-text">Tente ajustar os filtros ou faça uma nova busca</p>
+                </div>
+            `;
+            loadMoreBtn.style.display = 'none';
+            return;
+        }
+        
+        data.missoes.forEach(missao => {
+            const card = createMissionCard(missao);
+            container.insertAdjacentHTML('beforeend', card);
+        });
+        
+        hasMore = data.has_more;
+        loadMoreBtn.style.display = hasMore ? 'block' : 'none';
+        
+    } catch (error) {
+        console.error('Erro ao carregar missões:', error);
+        loading.style.display = 'none';
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                ❌ Erro ao carregar missões. Tente novamente.
+            </div>
+        `;
+    }
+    
+    isLoading = false;
+}
+
+// Criar card de missão
+function createMissionCard(m) {
+    const statusClass = m.concluida ? 'completed' : 'pending';
+    const statusIcon = m.concluida ? '✅' : '⏳';
+    
+    let resultBadge = '';
+    if (m.tipo === 'QUESTAO' && m.concluida) {
+        const resultClass = m.acertou ? 'correct' : 'wrong';
+        const resultText = m.acertou ? '✓ Acertou' : '✗ Errou';
+        const resultIcon = m.acertou ? 'correct' : 'wrong';
+        resultBadge = `
+            <div class="badge-result ${resultClass}">${resultText}</div>
+            <small style="color: #6b7280;">Resposta: ${m.resposta_escolhida || '-'}</small>
+        `;
+    }
+    
+    return `
+        <div class="mission-card-history ${statusClass}">
+            <div class="mission-status-icon ${statusClass}">
+                ${statusIcon}
+            </div>
+            
+            <div class="mission-info">
+                <h5 class="mission-title-history">${m.titulo}</h5>
+                <p style="color: #6b7280; margin: 0; font-size: 0.875rem;">${m.descricao}</p>
+                
+                <div class="mission-meta-tags">
+                    <span class="meta-tag disciplina" style="background-color: ${m.disciplina.cor}20; color: ${m.disciplina.cor};">
+                        ${m.disciplina.icone} ${m.disciplina.nome}
+                    </span>
+                    <span class="meta-tag xp">⭐ ${m.xp} XP</span>
+                    <span class="meta-tag tipo">${m.tipo_display}</span>
+                    <span class="meta-tag data">
+                        ${m.concluida ? '✅ ' + m.data_conclusao : '📅 ' + m.data_criacao}
+                    </span>
+                    <span class="meta-tag data">🏫 ${m.turma}</span>
+                </div>
+            </div>
+            
+            <div class="mission-actions">
+                ${resultBadge}
+            </div>
+        </div>
+    `;
+}
+
+// Event Listeners
+loadMoreBtn.addEventListener('click', () => {
+    currentPage++;
+    loadMissoes(true);
+});
+
+// Debounce para busca
+let searchTimeout;
+searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadMissoes(), 500);
+});
+
+// Filtros
+filterStatus.addEventListener('change', () => loadMissoes());
+filterDisciplina.addEventListener('change', () => loadMissoes());
+filterTipo.addEventListener('change', () => loadMissoes());
+
+// Carregar inicial
+loadMissoes();
+</script>
+
+{% endblock %}
