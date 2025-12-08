@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Adiciona active no clicado
             this.classList.add('active');
             
-            // Pega o filtro selecionado
+0            // Pega o filtro selecionado
             const filter = this.dataset.filter;
             
             let visibleCount = 0;
@@ -357,5 +357,285 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+
+
+
+<!-- SEÇÃO DE GRÁFICOS -->
+<div class="row g-4 mb-5">
+    <div class="col-12">
+        <h4 class="section-title mb-4">
+            <span class="title-icon">📊</span>
+            Estatísticas de Desempenho
+        </h4>
+    </div>
+    
+    <!-- Gráfico de Evolução de XP -->
+    <div class="col-lg-8">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5 class="chart-title">📈 Evolução de XP (Últimos 7 dias)</h5>
+            </div>
+            <div class="chart-body">
+                <canvas id="chartXPEvolucao"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de Taxa de Acerto -->
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5 class="chart-title">🎯 Taxa de Acerto</h5>
+            </div>
+            <div class="chart-body">
+                <canvas id="chartTaxaAcerto"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de XP por Disciplina -->
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5 class="chart-title">📚 XP por Disciplina</h5>
+            </div>
+            <div class="chart-body">
+                <canvas id="chartXPDisciplina"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico Radar de Desempenho -->
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h5 class="chart-title">🎯 Desempenho por Disciplina</h5>
+            </div>
+            <div class="chart-body">
+                <canvas id="chartDesempenhoRadar"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- JavaScript para os Gráficos -->
+<script>
+// Dados vindos do backend
+const diasLabels = {{ grafico_dias|safe }};
+const xpData = {{ grafico_xp|safe }};
+const disciplinasStats = {{ disciplinas_stats|safe }};
+const desempenhoRadar = {{ desempenho_radar|safe }};
+
+// 1. GRÁFICO DE EVOLUÇÃO DE XP (Linha)
+const ctxEvolucao = document.getElementById('chartXPEvolucao').getContext('2d');
+new Chart(ctxEvolucao, {
+    type: 'line',
+    data: {
+        labels: diasLabels,
+        datasets: [{
+            label: 'XP Ganho',
+            data: xpData,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#667eea',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: '#1f2937',
+                padding: 12,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#667eea',
+                borderWidth: 1
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: '#f3f4f6'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// 2. GRÁFICO DE TAXA DE ACERTO (Pizza)
+const ctxTaxa = document.getElementById('chartTaxaAcerto').getContext('2d');
+new Chart(ctxTaxa, {
+    type: 'doughnut',
+    data: {
+        labels: ['Acertos', 'Erros'],
+        datasets: [{
+            data: [{{ acertos }}, {{ erros }}],
+            backgroundColor: ['#10b981', '#ef4444'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: '#1f2937',
+                padding: 12
+            }
+        }
+    }
+});
+
+// 3. GRÁFICO DE XP POR DISCIPLINA (Barras Horizontais)
+const ctxDisciplina = document.getElementById('chartXPDisciplina').getContext('2d');
+new Chart(ctxDisciplina, {
+    type: 'bar',
+    data: {
+        labels: disciplinasStats.map(d => d.nome),
+        datasets: [{
+            label: 'XP Total',
+            data: disciplinasStats.map(d => d.xp),
+            backgroundColor: disciplinasStats.map(d => d.cor),
+            borderRadius: 8,
+            borderSkipped: false
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: '#1f2937',
+                padding: 12
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                grid: {
+                    color: '#f3f4f6'
+                }
+            },
+            y: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// 4. GRÁFICO RADAR DE DESEMPENHO
+const ctxRadar = document.getElementById('chartDesempenhoRadar').getContext('2d');
+new Chart(ctxRadar, {
+    type: 'radar',
+    data: {
+        labels: desempenhoRadar.labels,
+        datasets: [{
+            label: 'Progresso (%)',
+            data: desempenhoRadar.data,
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+            borderWidth: 2,
+            pointBackgroundColor: '#8b5cf6',
+            pointBorderColor: '#fff',
+            pointRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            r: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    stepSize: 20
+                },
+                grid: {
+                    color: '#f3f4f6'
+                }
+            }
+        }
+    }
+});
+</script>
+
+<style>
+/* Estilos para os cards de gráficos */
+.chart-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.chart-header {
+    padding: 1.5rem;
+    border-bottom: 2px solid #f3f4f6;
+    background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+}
+
+.chart-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.chart-body {
+    padding: 1.5rem;
+    height: 300px;
+}
+</style>
+
+
+
 
 {% endblock %}

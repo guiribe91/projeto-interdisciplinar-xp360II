@@ -8,7 +8,7 @@ from django.utils import timezone
 class Disciplina(models.Model):
     nome = models.CharField(max_length=100)
     icone = models.CharField(max_length=10)  # emoji
-    cor = models.CharField(max_length=7)     # hex color (#FF6B6B)
+    cor = models.CharField(max_length=7, default='#667eea')     # hex color (#FF6B6B)
     
     class Meta:
         verbose_name = "Disciplina"

@@ -7,6 +7,8 @@ from django.views.generic import TemplateView  # 🆕 NOVO
 from .models import Usuario
 from core.models import MissaoAluno, Missao, Turma, Disciplina
 from datetime import date
+from django.db.models import Sum, Count  
+from datetime import timedelta 
 import json
 
 # ---------------------------------------------------------
@@ -326,60 +328,135 @@ def deletar_turma(request, turma_id):
 
 @login_required
 def dashboard_aluno(request):
-    # Atualizar streak ao acessar o dashboard
-    request.user.atualizar_streak()
+    usuario = request.user
     
-    # Busca missões do aluno
-    missoes_aluno = MissaoAluno.objects.filter(aluno=request.user).order_by('-missao__data_criacao')
+    # Dados básicos
+    xp_total = usuario.xp_total
+    nivel = usuario.nivel
+    streak_atual = usuario.streak_atual
     
-    # Calcula estatísticas
-    total_missoes = missoes_aluno.count()
-    concluidas = missoes_aluno.filter(concluida=True).count()
-    pendentes = total_missoes - concluidas
-    progresso = (concluidas / total_missoes * 100) if total_missoes > 0 else 0
+    # Calcular XP necessário para próximo nível
+    xp_proximo = (nivel * 100) + 50
+    progresso_nivel = int((xp_total / xp_proximo) * 100) if xp_proximo > 0 else 0
     
     # Missões de hoje
-    concluidas_hoje = missoes_aluno.filter(
+    hoje = timezone.now().date()
+    missoes = MissaoAluno.objects.filter(
+        aluno=usuario,
+        missao__data_criacao__date=hoje
+    ).select_related('missao')
+    
+    concluidas_hoje = missoes.filter(concluida=True).count()
+    total_hoje = missoes.count()
+    progresso_dia = int((concluidas_hoje / total_hoje) * 100) if total_hoje > 0 else 0
+    
+    # === DADOS PARA GRÁFICOS ===
+    
+    # 1. XP dos últimos 7 dias
+    ultimos_7_dias = []
+    xp_por_dia = []
+    
+    for i in range(6, -1, -1):
+        data = hoje - timedelta(days=i)
+        
+        # Criar range do dia completo
+        inicio_dia = timezone.make_aware(
+            timezone.datetime.combine(data, timezone.datetime.min.time())
+        )
+        fim_dia = timezone.make_aware(
+            timezone.datetime.combine(data, timezone.datetime.max.time())
+        )
+        
+        # CORREÇÃO: Usar __range ao invés de __date
+        xp_dia = MissaoAluno.objects.filter(
+            aluno=usuario,
+            concluida=True,
+            data_conclusao__range=(inicio_dia, fim_dia)
+        ).aggregate(total=Sum('missao__xp'))['total'] or 0
+        
+        ultimos_7_dias.append(data.strftime('%d/%m'))
+        xp_por_dia.append(xp_dia)
+    
+    # 2. XP por disciplina
+    disciplinas_stats = []
+    disciplinas = Disciplina.objects.all()
+    
+    for disciplina in disciplinas:
+        xp_disciplina = MissaoAluno.objects.filter(
+            aluno=usuario,
+            concluida=True,
+            missao__disciplina=disciplina
+        ).aggregate(total=Sum('missao__xp'))['total'] or 0
+        
+        if xp_disciplina > 0:
+            disciplinas_stats.append({
+                'nome': disciplina.nome,
+                'xp': xp_disciplina,
+                'cor': disciplina.cor or '#667eea'
+            })
+    
+    # 3. Taxa de acerto (para gráfico de pizza)
+    total_questoes = MissaoAluno.objects.filter(
+        aluno=usuario,
         concluida=True,
-        data_conclusao=timezone.now().date()
+        missao__tipo='QUESTAO'
     ).count()
     
-    # Pegar notificações da sessão
-    badges_novas = request.session.pop('badges_novas', None)
-    nivel_novo = request.session.pop('nivel_novo', None)
-    streak_info = request.session.pop('streak_info', None)
+    acertos = MissaoAluno.objects.filter(
+        aluno=usuario,
+        concluida=True,
+        acertou=True,
+        missao__tipo='QUESTAO'
+    ).count()
     
-    # Converter streak_info de JSON string para dict se existir
-    if streak_info:
-        try:
-            streak_info = json.loads(streak_info)
-        except:
-            streak_info = None
+    erros = total_questoes - acertos
+    
+    # 4. Desempenho por disciplina (para gráfico radar)
+    desempenho_radar = {
+        'labels': [],
+        'data': []
+    }
+    
+    for disciplina in disciplinas[:6]:  # Limitar a 6 para não poluir
+        total_missoes = MissaoAluno.objects.filter(
+            aluno=usuario,
+            missao__disciplina=disciplina
+        ).count()
+        
+        if total_missoes > 0:
+            concluidas = MissaoAluno.objects.filter(
+                aluno=usuario,
+                concluida=True,
+                missao__disciplina=disciplina
+            ).count()
+            
+            percentual = int((concluidas / total_missoes) * 100)
+            desempenho_radar['labels'].append(disciplina.nome[:15])
+            desempenho_radar['data'].append(percentual)
     
     context = {
-        'missoes': missoes_aluno,
-        'xp_total': request.user.xp_total,
-        'nivel': request.user.nivel,
-        'xp_proximo': request.user.xp_para_proximo_nivel(),
-        'progresso_nivel': request.user.progresso_nivel(),
-        'total_hoje': total_missoes,
+        'xp_total': xp_total,
+        'nivel': nivel,
+        'streak_atual': streak_atual,
+        'melhor_streak': usuario.melhor_streak,
+        'xp_proximo': xp_proximo,
+        'progresso_nivel': progresso_nivel,
+        'missoes': missoes,
         'concluidas_hoje': concluidas_hoje,
-        'pendentes': pendentes,
-        'progresso_dia': int(progresso),
+        'total_hoje': total_hoje,
+        'progresso_dia': progresso_dia,
+        'pendentes': total_hoje - concluidas_hoje,
         
-        # Dados de streak
-        'streak_atual': request.user.streak_atual,
-        'melhor_streak': request.user.melhor_streak,
-        'titulo_streak': request.user.get_titulo_streak(),
-        
-        # Dados para notificações
-        'badges_novas': json.dumps(badges_novas) if badges_novas else '[]',
-        'nivel_novo': nivel_novo,
-        'streak_info': json.dumps(streak_info) if streak_info else 'null',
+        # Dados para gráficos (convertidos para JSON)
+        'grafico_dias': json.dumps(ultimos_7_dias),
+        'grafico_xp': json.dumps(xp_por_dia),
+        'disciplinas_stats': json.dumps(disciplinas_stats),
+        'acertos': acertos,
+        'erros': erros,
+        'desempenho_radar': json.dumps(desempenho_radar),
     }
     
     return render(request, 'accounts/dashboard_aluno.html', context)
-
 
 # ---------------------------------------------------------
 # DETALHES DA TURMA
