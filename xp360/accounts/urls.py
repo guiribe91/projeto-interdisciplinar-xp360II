@@ -3,6 +3,7 @@
 from django.urls import path
 from . import views
 
+
 urlpatterns = [
     # Autenticação
     path('login/', views.login_view, name='login'),
@@ -23,4 +24,8 @@ urlpatterns = [
     # Ranking e Conquistas
     path('ranking/', views.ranking, name='ranking'),
     path('conquistas/', views.conquistas, name='conquistas'),
+
+    # NOVAS URLs
+    path('politica-privacidade/', views.PoliticaPrivacidadeView.as_view(), name='politica_privacidade'),
+    path('termos-uso/', views.TermosUsoView.as_view(), name='termos_uso'),
 ]

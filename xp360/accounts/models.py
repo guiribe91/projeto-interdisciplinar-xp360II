@@ -1,3 +1,5 @@
+# accounts/models.py
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
@@ -26,27 +28,12 @@ class Usuario(AbstractUser):
     streak_atual = models.IntegerField(default=0)
     melhor_streak = models.IntegerField(default=0)
     ultimo_acesso = models.DateField(null=True, blank=True)
-    
-    class Meta:
-        verbose_name = "Usuário"
-        verbose_name_plural = "Usuários"
-
-    def __str__(self):
-        return self.username
-    
-
-
-
-    
-    # Sistema de XP e Níveis
-    xp_total = models.IntegerField(default=0)
-    nivel = models.IntegerField(default=1)
-    
-    # 🔥 NOVO: Sistema de Streak
-    streak_atual = models.IntegerField(default=0)
-    melhor_streak = models.IntegerField(default=0)
-    ultimo_acesso = models.DateField(null=True, blank=True)
     ultima_missao_concluida = models.DateField(null=True, blank=True)
+    
+    # 🆕 LGPD - Termos e Consentimento
+    aceitou_termos = models.BooleanField(default=False)
+    data_aceite_termos = models.DateTimeField(null=True, blank=True)
+    ip_aceite_termos = models.GenericIPAddressField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Usuário"

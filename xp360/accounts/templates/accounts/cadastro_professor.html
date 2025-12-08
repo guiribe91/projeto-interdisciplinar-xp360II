@@ -89,13 +89,21 @@
                     <small class="form-hint">Mínimo de 8 caracteres</small>
                 </div>
 
-                <!-- Termos -->
                 <div class="form-check-modern">
-                    <input type="checkbox" id="terms" required>
-                    <label for="terms">
-                        Confirmo que sou educador e concordo com os <a href="#" class="link-primary">termos de uso</a>
-                    </label>
-                </div>
+    {{ form.aceito_termos }}
+    <label for="{{ form.aceito_termos.id_for_label }}">
+        Concordo com os 
+        <a href="{% url 'termos_uso' %}" target="_blank" class="link-primary">Termos de Uso</a>
+        e a
+        <a href="{% url 'politica_privacidade' %}" target="_blank" class="link-primary">Política de Privacidade</a>
+    </label>
+</div>
+
+{% if form.aceito_termos.errors %}
+    <div class="error-message">
+        {{ form.aceito_termos.errors.0 }}
+    </div>
+{% endif %}
 
                 <button type="submit" class="btn-register teacher-btn">
                     <span>Criar conta de professor</span>
@@ -111,6 +119,7 @@
 
             <!-- Link de Login -->
             <a href="{% url 'login' %}" class="btn-secondary-register">
+
                 <span class="btn-icon">←</span>
                 <span>Voltar ao login</span>
             </a>

@@ -3,10 +3,22 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.views.generic import TemplateView  # 🆕 NOVO
 from .models import Usuario
 from core.models import MissaoAluno, Missao, Turma, Disciplina
 from datetime import date
 import json
+
+# ---------------------------------------------------------
+# 🆕 NOVAS VIEWS - PÁGINAS LEGAIS (LGPD)
+# ---------------------------------------------------------
+
+class PoliticaPrivacidadeView(TemplateView):
+    template_name = 'accounts/politica_privacidade.html'
+
+class TermosUsoView(TemplateView):
+    template_name = 'accounts/termos_uso.html'
+
 
 # ---------------------------------------------------------
 # LOGIN / LOGOUT
@@ -24,6 +36,7 @@ def login_view(request):
             # Redirecionamento por tipo
             if user.tipo == 'ALUNO':
                 return redirect('dashboard_aluno')
+
             elif user.tipo == 'PROFESSOR':
                 return redirect('dashboard_professor')
 
@@ -51,7 +64,15 @@ def cadastro_aluno(request):
             username = request.POST.get('username')
             email = request.POST.get('email')
             password = request.POST.get('password')
-            turmas_ids = request.POST.getlist('turmas')  # Lista de IDs das turmas
+            turmas_ids = request.POST.getlist('turmas')
+            aceito_termos = request.POST.get('aceito_termos')  # 🆕 NOVO
+            
+            # 🆕 NOVO: Validar aceite dos termos
+            if not aceito_termos:
+                return render(request, 'accounts/cadastro_aluno.html', {
+                    'turmas': Turma.objects.all().order_by('serie', 'nome'),
+                    'erro': 'Você deve aceitar os Termos de Uso e a Política de Privacidade para se cadastrar.'
+                })
             
             # Validações básicas
             if not username or not email or not password:
@@ -87,7 +108,18 @@ def cadastro_aluno(request):
                 tipo='ALUNO'
             )
             
-            # 🔥 IMPORTANTE: Usar turmas_aluno (nome correto do campo ManyToMany)
+            # 🆕 NOVO: Registrar aceite dos termos (LGPD)
+            usuario.aceitou_termos = True
+            usuario.data_aceite_termos = timezone.now()
+            
+            # Capturar IP do usuário
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                usuario.ip_aceite_termos = x_forwarded_for.split(',')[0]
+            else:
+                usuario.ip_aceite_termos = request.META.get('REMOTE_ADDR')
+            
+            # Associar turmas
             turmas = Turma.objects.filter(id__in=turmas_ids)
             usuario.turmas_aluno.set(turmas)
             
@@ -113,7 +145,6 @@ def cadastro_aluno(request):
         'turmas': Turma.objects.all().order_by('serie', 'nome')
     }
     
-    # ✅ CORREÇÃO: Adicionar o return que estava faltando!
     return render(request, 'accounts/cadastro_aluno.html', context)
 
 
@@ -122,13 +153,36 @@ def cadastro_professor(request):
         username = request.POST.get("username")
         email = request.POST.get("email")
         senha = request.POST.get("password")
+        aceito_termos = request.POST.get('aceito_termos')  # 🆕 NOVO
+        
+        # 🆕 NOVO: Validar aceite dos termos
+        if not aceito_termos:
+            return render(request, "accounts/cadastro_professor.html", {
+                'erro': 'Você deve aceitar os Termos de Uso e a Política de Privacidade para se cadastrar.'
+            })
 
-        Usuario.objects.create_user(
+        # Criar usuário
+        usuario = Usuario.objects.create_user(
             username=username,
             email=email,
             password=senha,
             tipo="PROFESSOR"
         )
+        
+        # 🆕 NOVO: Registrar aceite dos termos (LGPD)
+        usuario.aceitou_termos = True
+        usuario.data_aceite_termos = timezone.now()
+        
+        # Capturar IP do usuário
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            usuario.ip_aceite_termos = x_forwarded_for.split(',')[0]
+        else:
+            usuario.ip_aceite_termos = request.META.get('REMOTE_ADDR')
+        
+        usuario.save()
+        
+        messages.success(request, 'Conta de professor criada com sucesso! Faça login para começar.')
         return redirect('login')
 
     return render(request, "accounts/cadastro_professor.html")

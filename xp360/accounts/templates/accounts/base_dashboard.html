@@ -16,6 +16,7 @@
 
 <body>
 
+    {% if user.is_authenticated %}
     <!-- SIDEBAR -->
     <div class="sidebar">
         
@@ -37,15 +38,15 @@
             {% if user.tipo == 'ALUNO' %}
             <div class="user-stats">
                 <div class="user-stat">
-                    <span class="stat-value">{{ user.nivel }}</span>
+                    <span class="stat-value">{{ user.nivel|default:1 }}</span>
                     <span class="stat-label">NÍVEL</span>
                 </div>
                 <div class="user-stat">
-                    <span class="stat-value">{{ user.xp_total }}</span>
+                    <span class="stat-value">{{ user.xp_total|default:0 }}</span>
                     <span class="stat-label">XP</span>
                 </div>
                 <div class="user-stat">
-                    <span class="stat-value">{{ user.streak_atual }}</span>
+                    <span class="stat-value">{{ user.streak_atual|default:0 }}</span>
                     <span class="stat-label">🔥 DIAS</span>
                 </div>
             </div>
@@ -116,6 +117,15 @@
         <!-- Conteúdo da página -->
         {% block content %}{% endblock %}
     </div>
+    {% else %}
+    <!-- Conteúdo para usuário não autenticado -->
+    <div class="container mt-5">
+        <div class="alert alert-warning">
+            Você precisa estar autenticado para acessar esta página.
+            <a href="{% url 'login' %}" class="alert-link">Fazer login</a>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Toast Container -->
     <div id="toast-container"></div>

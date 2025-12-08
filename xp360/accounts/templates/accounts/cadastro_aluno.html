@@ -131,13 +131,30 @@
                     </div>
                 </div>
 
-                <!-- Termos -->
-                <div class="form-check-modern">
-                    <input type="checkbox" id="terms" required>
-                    <label for="terms">
-                        Concordo com os <a href="#" class="link-primary">termos de uso</a> e <a href="#" class="link-primary">política de privacidade</a>
-                    </label>
-                </div>
+                <!-- Adicionar logo antes do botão "Criar minha conta" -->
+
+<!-- Checkbox de Termos de Uso -->
+<div class="form-group-modern">
+    <label class="checkbox-modern">
+        <input 
+            type="checkbox" 
+            name="aceito_termos" 
+            id="aceito_termos" 
+            required
+            class="checkbox-input"
+        >
+        <span class="checkbox-custom">
+            <span class="checkbox-check">✓</span>
+        </span>
+        <span class="checkbox-label">
+            Concordo com os 
+            <a href="{% url 'termos_uso' %}" target="_blank" class="link-primary">Termos de Uso</a>
+            e a
+            <a href="{% url 'politica_privacidade' %}" target="_blank" class="link-primary">Política de Privacidade</a>
+        </span>
+    </label>
+</div>
+                
 
                 <button type="submit" class="btn-register">
                     <span>Criar minha conta</span>
@@ -153,6 +170,7 @@
 
             <!-- Link de Login -->
             <a href="{% url 'login' %}" class="btn-secondary-register">
+
                 <span class="btn-icon">←</span>
                 <span>Voltar ao login</span>
             </a>
